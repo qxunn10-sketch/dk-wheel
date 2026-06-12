@@ -1,76 +1,56 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DK考古转盘</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DK考古馆</title>
 <style>
-body{font-family:Arial,sans-serif;max-width:900px;margin:20px auto;padding:10px;text-align:center}
-button{padding:10px 18px;margin:6px;font-size:16px}
-.card{border:1px solid #ddd;border-radius:12px;padding:18px;margin-top:16px}
-#result{font-size:26px;font-weight:bold;margin-top:15px}
-.small{color:#666}
+:root{--bg:#fff8fb;--card:#fff;--text:#2f2f2f;--muted:#777;--line:#f0dbe4;--main:#f39abc;--main2:#fff0f6}
+*{box-sizing:border-box}body{margin:0;padding:18px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text)}
+.wrap{max-width:880px;margin:0 auto}h1{text-align:center;margin:10px 0 6px}.sub{text-align:center;color:var(--muted);margin-bottom:16px;font-size:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 6px 18px rgba(180,90,120,.08)}
+.row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}button,select,input,textarea{font:inherit;border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}button{cursor:pointer}.primary{background:var(--main);color:#fff;border-color:var(--main);font-weight:700}.soft{background:var(--main2)}.danger{color:#b00020}
+#result{font-size:24px;font-weight:800;text-align:center;margin:14px 0 6px;line-height:1.35}.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--main2);color:#9d4567;font-size:13px;margin:3px}textarea{width:100%;min-height:82px;margin-top:8px;resize:vertical}input.name{width:180px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.stat{background:var(--main2);border-radius:14px;padding:10px}.stat b{display:block;font-size:20px}.item{border-top:1px solid var(--line);padding:12px 0;text-align:left}.item:first-child{border-top:0}.item-title{font-weight:800}.small{color:var(--muted);font-size:13px}.list-controls{display:flex;gap:8px;flex-wrap:wrap}.list-controls input{flex:1;min-width:180px}@media(max-width:520px){body{padding:12px}.stats{grid-template-columns:1fr 1fr 1fr}#result{font-size:21px}button,select,input{padding:9px 10px}}
 </style>
 </head>
 <body>
-<h1>🎡 DK考古转盘</h1>
-<p class="small">先选类型，再抽物料</p>
-
-<button onclick="draw('concert')">🎤 演唱会</button>
-<button onclick="draw('variety')">📺 综艺</button>
-<button onclick="draw('radio')">📻 电台</button>
-<button onclick="draw('all')">🎲 完全随机</button>
-
-<div class="card">
-<div id="type">准备开始</div>
-<div id="result">点击按钮抽取</div>
+<div class="wrap">
+<h1>🎡 DK考古馆</h1>
+<div class="sub">群里一起抽、一起看、看完顺手记录。当前测试版数据保存在本机浏览器。</div>
+<div class="card"><div class="row"><span>你的昵称：</span><input class="name" id="nickname" placeholder="例如：小林" oninput="saveNick()"></div></div>
+<div class="card"><div class="stats"><div class="stat"><b id="totalCount">0</b><span>总物料</span></div><div class="stat"><b id="eventCount">0</b><span>考古记录</span></div><div class="stat"><b id="reviewCount">0</b><span>评价数</span></div></div></div>
+<div class="card"><h2>🎲 抽一个吧</h2><div class="row"><select id="drawType"><option value="全部">全部物料</option><option value="演唱会">🎤 演唱会</option><option value="综艺">📺 综艺</option><option value="电台">📻 电台</option></select><button class="primary" onclick="drawMaterial()">开始抽取</button></div><div id="result">等待抽取</div><div id="resultMeta" class="small" style="text-align:center;"></div><div class="row" style="margin-top:10px;"><button class="soft" onclick="createEvent()">➕ 发起本次考古</button><button onclick="redraw()">换一个</button></div></div>
+<div class="card"><h2>👥 当前/历史考古</h2><div id="events"></div></div>
+<div class="card"><h2>➕ 新增物料</h2><div class="row"><input id="newTitle" placeholder="物料名称" style="min-width:220px;flex:1;"><select id="newType"><option value="演唱会">演唱会</option><option value="综艺">综艺</option><option value="电台">电台</option><option value="其他">其他</option></select><button onclick="addMaterial()">添加</button></div></div>
+<div class="card"><h2>📚 物料库</h2><div class="list-controls"><input id="search" placeholder="搜索物料..." oninput="renderMaterials()"><select id="filterType" onchange="renderMaterials()"><option value="全部">全部</option><option value="演唱会">演唱会</option><option value="综艺">综艺</option><option value="电台">电台</option><option value="其他">其他</option></select></div><div id="materials"></div></div>
 </div>
-
 <script>
-const concert=[
-"25克拉岛D1","25克拉岛D2","24克拉岛D1","24克拉岛D2","23克拉岛D1","23克拉岛D2","23克拉岛D3",
-"22克拉岛D1","22克拉岛D2","21克拉岛","20克拉岛","22 DFesta","2023 TEMA",
-"2019 Happy Ending Showcase","2018 Arena SVT","180701 IDEAL CUT韩D4","2018 IDEAL CUT日",
-"181103 IDEAL CUT安可场","220625 BE THE SUN首尔D1","220626 BE THE SUN首尔D2",
-"221127 BE THE SUN东京D2","2022 BE THE SUN芝加哥舞台","2019 ODE TO YOU日本场",
-"2017 Diamond Edge","2018 Say the Name横滨","190901 ODE TO YOU首尔D3",
-"2016 Shining Diamond首尔","2019 Haru","181007 Summer Camp","180531日本出道Showcase",
-"2021 HARE","211108 24H Release Event","211225 Power of Love FM",
-"160214 LIKE SEVENTEEN","2022 Hanabi","Hanabi幕后花絮","230528 LOVE东京","230518 LOVE大阪"
+const defaultMaterials = [
+{id:'m1',title:'25克拉岛D1',type:'演唱会'},{id:'m2',title:'25克拉岛D2',type:'演唱会'},{id:'m3',title:'24克拉岛D1',type:'演唱会'},{id:'m4',title:'24克拉岛D2',type:'演唱会'},{id:'m5',title:'23克拉岛D1',type:'演唱会'},{id:'m6',title:'23克拉岛D2',type:'演唱会'},{id:'m7',title:'23克拉岛D3',type:'演唱会'},{id:'m8',title:'22克拉岛D1',type:'演唱会'},{id:'m9',title:'22克拉岛D2',type:'演唱会'},{id:'m10',title:'21克拉岛',type:'演唱会'},{id:'m11',title:'20克拉岛',type:'演唱会'},
+{id:'m12',title:'2019 Haru',type:'演唱会'},{id:'m13',title:'230528 LOVE东京/多视角',type:'演唱会'},{id:'m14',title:'230518 LOVE大阪/多视角',type:'演唱会'},{id:'m15',title:'2019 ODE TO YOU日本场',type:'演唱会'},{id:'m16',title:'220625 BE THE SUN首尔D1',type:'演唱会'},{id:'m17',title:'220626 BE THE SUN首尔D2',type:'演唱会'},{id:'m18',title:'2017 Diamond Edge',type:'演唱会'},{id:'m19',title:'2022 Hanabi',type:'演唱会'},
+{id:'m20',title:'180330 Hongkira电台',type:'电台'},{id:'m21',title:'230211 朴素贤的Love Game电台',type:'电台'},{id:'m22',title:'150703 Kiss The Radio',type:'电台'},{id:'m23',title:'160501 Kiss The Radio',type:'电台'},{id:'m24',title:'190926 郑素敏Young Street电台',type:'电台'},{id:'m25',title:'170609 NCT的Night Night电台',type:'电台'},{id:'m26',title:'200308 耳待耳待#71',type:'电台'},{id:'m27',title:'200429 耳待耳待#77',type:'电台'},{id:'m28',title:'200528 耳待耳待#81',type:'电台'},
+{id:'m29',title:'160619 My Little TV',type:'综艺'},{id:'m30',title:'171121 妈妈睡着后',type:'综艺'},{id:'m31',title:'180609 真实!SVT TV',type:'综艺'},{id:'m32',title:'180131 AmigoTV',type:'综艺'},{id:'m33',title:'191023 挑战! Dispatch Mind',type:'综艺'},{id:'m34',title:'191221 SVT的休息日2:SEVENTEEN的寒假',type:'综艺'},{id:'m35',title:'NewsAde合集',type:'综艺'},{id:'m36',title:'文明快车EP.158+文明特辑EP.122',type:'综艺'},{id:'m37',title:'SVT学校',type:'综艺'},{id:'m38',title:'200614 教练在看着-阴森的课外辅导',type:'综艺'},{id:'m39',title:'200725 突袭V',type:'综艺'}
 ];
-
-const variety=[
-"160619 My Little TV","171121 妈妈睡着后","180609 真实SVT TV",
-"二周年纪念特番","Vlive网红拉面挑战记②","180131 AmigoTV",
-"191023 Dispatch Mind","191221 SVT的休息日2","NewsAde合集",
-"文明快车EP158","文明特辑EP122","SVT学校",
-"教练在看着-阴森的课外辅导","200725突袭V"
-];
-
-const radio=[
-"180330 Hongkira","180322 Old School","190926 Young Street",
-"200629 Young Street","201022 入坑的广场","150703 Kiss The Radio",
-"230211 Love Game","170609 NCT Night Night","160501 Kiss The Radio",
-"耳待耳待#71","耳待耳待#77","耳待耳待#81"
-];
-
-function pick(arr){
- return arr[Math.floor(Math.random()*arr.length)];
-}
-
-function draw(type){
- let arr,name;
- if(type==='concert'){arr=concert;name='🎤 演唱会';}
- else if(type==='variety'){arr=variety;name='📺 综艺';}
- else if(type==='radio'){arr=radio;name='📻 电台';}
- else{
-   arr=[...concert,...variety,...radio];
-   name='🎲 完全随机';
- }
- document.getElementById('type').innerText=name;
- document.getElementById('result').innerText='✨ '+pick(arr);
-}
+let materials=JSON.parse(localStorage.getItem('dk_materials')||'null')||defaultMaterials;
+let events=JSON.parse(localStorage.getItem('dk_events')||'[]');
+let current=null;
+document.getElementById('nickname').value=localStorage.getItem('dk_nickname')||'';
+function saveAll(){localStorage.setItem('dk_materials',JSON.stringify(materials));localStorage.setItem('dk_events',JSON.stringify(events));updateStats();renderEvents();renderMaterials();}
+function saveNick(){localStorage.setItem('dk_nickname',document.getElementById('nickname').value.trim());}
+function nick(){return document.getElementById('nickname').value.trim()||'匿名';}
+function typeEmoji(t){return t==='演唱会'?'🎤':t==='综艺'?'📺':t==='电台'?'📻':'📌';}
+function stars(n){return '⭐'.repeat(Number(n||0))||'未评分';}
+function drawMaterial(){const t=document.getElementById('drawType').value;const pool=materials.filter(m=>t==='全部'||m.type===t);if(!pool.length)return alert('这个分类还没有物料');current=pool[Math.floor(Math.random()*pool.length)];document.getElementById('result').innerText='✨ '+current.title;document.getElementById('resultMeta').innerHTML='<span class="badge">'+typeEmoji(current.type)+' '+current.type+'</span>';}
+function redraw(){drawMaterial();}
+function createEvent(){if(!current)return alert('请先抽取一个物料');events.unshift({id:'e'+Date.now(),materialId:current.id,title:current.title,type:current.type,host:nick(),time:new Date().toLocaleString(),participants:[]});saveAll();}
+function joinEvent(eventId,state){const e=events.find(x=>x.id===eventId);const name=nick();let p=e.participants.find(x=>x.name===name);if(!p){p={name,state,score:0,note:''};e.participants.push(p);}else{p.state=state;}saveAll();}
+function saveReview(eventId){const e=events.find(x=>x.id===eventId);const name=nick();let p=e.participants.find(x=>x.name===name);if(!p){p={name,state:'已看',score:0,note:''};e.participants.push(p);}p.state=document.getElementById('state_'+eventId).value;p.score=Number(document.getElementById('score_'+eventId).value);p.note=document.getElementById('note_'+eventId).value.trim();saveAll();alert('已保存你的记录');}
+function deleteEvent(eventId){if(confirm('确定删除这次考古记录吗？')){events=events.filter(e=>e.id!==eventId);saveAll();}}
+function renderEvents(){const box=document.getElementById('events');if(!events.length){box.innerHTML='<div class="small">还没有发起考古。先抽一个，再点“发起本次考古”。</div>';return;}box.innerHTML=events.map(e=>{const watched=e.participants.filter(p=>p.state==='已看').length;const pending=e.participants.filter(p=>p.state==='待补').length;const joined=e.participants.length;const scores=e.participants.map(p=>Number(p.score)).filter(Boolean);const avg=scores.length?(scores.reduce((a,b)=>a+b,0)/scores.length).toFixed(1):'暂无';const reviews=e.participants.length?e.participants.map(p=>'<div class="item"><div><b>'+p.name+'</b> <span class="badge">'+p.state+'</span> <span>'+stars(p.score)+'</span></div><div class="small">'+(p.note||'还没有备注')+'</div></div>').join(''):'<div class="small">还没有人加入。</div>';return '<div class="item"><div class="item-title">'+typeEmoji(e.type)+' '+e.title+'</div><div class="small">发起人：'+e.host+' ｜ '+e.time+'</div><div><span class="badge">参与 '+joined+'</span><span class="badge">已看 '+watched+'</span><span class="badge">待补 '+pending+'</span><span class="badge">均分 '+avg+'</span></div><div class="row" style="justify-content:flex-start;margin-top:8px;"><button onclick="joinEvent(\''+e.id+'\',\'加入考古\')">加入考古</button><button onclick="joinEvent(\''+e.id+'\',\'待补\')">待补</button><button onclick="joinEvent(\''+e.id+'\',\'已看\')">已看</button></div><div style="margin-top:8px;"><select id="state_'+e.id+'"><option value="加入考古">加入考古</option><option value="待补">待补</option><option value="已看">已看</option></select><select id="score_'+e.id+'"><option value="0">未评分</option><option value="1">1星</option><option value="2">2星</option><option value="3">3星</option><option value="4">4星</option><option value="5">5星</option></select><textarea id="note_'+e.id+'" placeholder="写下你的评价/备注..."></textarea><button class="primary" onclick="saveReview(\''+e.id+'\')">保存我的记录</button><button class="danger" onclick="deleteEvent(\''+e.id+'\')">删除本次</button></div><h4>大家的记录</h4>'+reviews+'</div>';}).join('');}
+function addMaterial(){const title=document.getElementById('newTitle').value.trim();const type=document.getElementById('newType').value;if(!title)return alert('请填写物料名称');materials.push({id:'m'+Date.now(),title,type});document.getElementById('newTitle').value='';saveAll();}
+function renderMaterials(){const q=document.getElementById('search').value.trim().toLowerCase();const t=document.getElementById('filterType').value;const arr=materials.filter(m=>(t==='全部'||m.type===t)&&m.title.toLowerCase().includes(q));document.getElementById('materials').innerHTML=arr.map(m=>'<div class="item"><span class="item-title">'+typeEmoji(m.type)+' '+m.title+'</span><span class="badge">'+m.type+'</span></div>').join('')||'<div class="small">没有找到物料。</div>';}
+function updateStats(){const reviewCount=events.reduce((sum,e)=>sum+e.participants.filter(p=>p.note||p.score||p.state).length,0);document.getElementById('totalCount').innerText=materials.length;document.getElementById('eventCount').innerText=events.length;document.getElementById('reviewCount').innerText=reviewCount;}
+updateStats();renderEvents();renderMaterials();
 </script>
 </body>
 </html>
