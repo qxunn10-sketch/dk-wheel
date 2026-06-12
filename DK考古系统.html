@@ -1,0 +1,76 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DK考古转盘</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:900px;margin:20px auto;padding:10px;text-align:center}
+button{padding:10px 18px;margin:6px;font-size:16px}
+.card{border:1px solid #ddd;border-radius:12px;padding:18px;margin-top:16px}
+#result{font-size:26px;font-weight:bold;margin-top:15px}
+.small{color:#666}
+</style>
+</head>
+<body>
+<h1>🎡 DK考古转盘</h1>
+<p class="small">先选类型，再抽物料</p>
+
+<button onclick="draw('concert')">🎤 演唱会</button>
+<button onclick="draw('variety')">📺 综艺</button>
+<button onclick="draw('radio')">📻 电台</button>
+<button onclick="draw('all')">🎲 完全随机</button>
+
+<div class="card">
+<div id="type">准备开始</div>
+<div id="result">点击按钮抽取</div>
+</div>
+
+<script>
+const concert=[
+"25克拉岛D1","25克拉岛D2","24克拉岛D1","24克拉岛D2","23克拉岛D1","23克拉岛D2","23克拉岛D3",
+"22克拉岛D1","22克拉岛D2","21克拉岛","20克拉岛","22 DFesta","2023 TEMA",
+"2019 Happy Ending Showcase","2018 Arena SVT","180701 IDEAL CUT韩D4","2018 IDEAL CUT日",
+"181103 IDEAL CUT安可场","220625 BE THE SUN首尔D1","220626 BE THE SUN首尔D2",
+"221127 BE THE SUN东京D2","2022 BE THE SUN芝加哥舞台","2019 ODE TO YOU日本场",
+"2017 Diamond Edge","2018 Say the Name横滨","190901 ODE TO YOU首尔D3",
+"2016 Shining Diamond首尔","2019 Haru","181007 Summer Camp","180531日本出道Showcase",
+"2021 HARE","211108 24H Release Event","211225 Power of Love FM",
+"160214 LIKE SEVENTEEN","2022 Hanabi","Hanabi幕后花絮","230528 LOVE东京","230518 LOVE大阪"
+];
+
+const variety=[
+"160619 My Little TV","171121 妈妈睡着后","180609 真实SVT TV",
+"二周年纪念特番","Vlive网红拉面挑战记②","180131 AmigoTV",
+"191023 Dispatch Mind","191221 SVT的休息日2","NewsAde合集",
+"文明快车EP158","文明特辑EP122","SVT学校",
+"教练在看着-阴森的课外辅导","200725突袭V"
+];
+
+const radio=[
+"180330 Hongkira","180322 Old School","190926 Young Street",
+"200629 Young Street","201022 入坑的广场","150703 Kiss The Radio",
+"230211 Love Game","170609 NCT Night Night","160501 Kiss The Radio",
+"耳待耳待#71","耳待耳待#77","耳待耳待#81"
+];
+
+function pick(arr){
+ return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function draw(type){
+ let arr,name;
+ if(type==='concert'){arr=concert;name='🎤 演唱会';}
+ else if(type==='variety'){arr=variety;name='📺 综艺';}
+ else if(type==='radio'){arr=radio;name='📻 电台';}
+ else{
+   arr=[...concert,...variety,...radio];
+   name='🎲 完全随机';
+ }
+ document.getElementById('type').innerText=name;
+ document.getElementById('result').innerText='✨ '+pick(arr);
+}
+</script>
+</body>
+</html>
