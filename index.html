@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆 V12</title>
+<title>🍀李米米考古馆 V12.1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -92,7 +92,7 @@ input,select,textarea{
 
 <body>
 
-<h1>🍀李米米考古馆 V12</h1>
+<h1>🍀李米米考古馆 V12.1</h1>
 
 <div class="container">
 
@@ -147,19 +147,32 @@ input,select,textarea{
 
 <script>
 
+// ================= Supabase =================
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
 const supabaseKey = "你的anon key";
-
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ========== 数据 ==========
+// ================= 数据 =================
 let materials = [];
 let records = [];
 let current = null;
 let selectedType = "全部";
 let sessionDrawn = [];
 
-// ========== 初始化 ==========
+// ================= 分类函数（核心稳定） =================
+function classify(name=""){
+
+  name = name.toLowerCase();
+
+  if(name.includes("直播")) return "直播";
+  if(name.includes("radio") || name.includes("电台") || name.includes("kiss")) return "电台";
+  if(name.includes("show") || name.includes("going")) return "综艺";
+  if(name.includes("tour") || name.includes("be the sun") || name.includes("ideal") || name.includes("ode")) return "舞台";
+
+  return "其他";
+}
+
+// ================= 初始化 =================
 async function init(){
   await loadMaterials();
   await loadRecords();
@@ -167,16 +180,17 @@ async function init(){
 }
 init();
 
-// ========== 物料 ==========
+// ================= 加载物料 =================
 async function loadMaterials(){
   const { data } = await client.from("materials").select("*");
   materials = data || [];
   renderMaterials();
 }
 
-// ========== 记录 ==========
+// ================= 加载记录 =================
 async function loadRecords(){
-  const { data } = await client.from("records")
+  const { data } = await client
+    .from("records")
     .select("*")
     .order("created_at",{ascending:false});
 
@@ -184,9 +198,10 @@ async function loadRecords(){
   renderRecords();
 }
 
-// ========== 分类自动生成 ==========
+// ================= 分类按钮 =================
 function renderTypes(){
-  let types = ["全部", ...new Set(materials.map(m=>m.type).filter(Boolean))];
+
+  const types = ["全部","舞台","综艺","直播","电台","其他"];
 
   let box = document.getElementById("typeBox");
   box.innerHTML = "";
@@ -206,41 +221,45 @@ function selectType(t){
   renderTypes();
 }
 
-// ========== 抽签 ==========
+// ================= 抽签（完全修复版） =================
 function draw(){
 
   let pool = materials;
 
   if(selectedType !== "全部"){
     pool = materials.filter(m =>
-      (m.type||"").includes(selectedType)
+      classify(m.name) === selectedType
     );
   }
 
   if(pool.length === 0){
-    alert("该分类没有物料");
+    alert("该分类没有物料（请检查数据）");
     return;
   }
 
   current = pool[Math.floor(Math.random()*pool.length)];
 
-  let isRecorded = records.some(r => r.material_name === current.name);
-  let isSession = sessionDrawn.includes(current.name);
+  let cat = classify(current.name);
 
+  let isRecorded = records.some(r =>
+    r.material_name === current.name
+  );
+
+  let isSession = sessionDrawn.includes(current.name);
   sessionDrawn.push(current.name);
 
   document.getElementById("result").innerHTML = `
     <h2>${current.name}</h2>
-    <div class="small">分类：${current.type}</div>
-    ${isRecorded ? "<div style='color:#ff7b7b'>✔ 你记录过这个</div>" : ""}
-    ${isSession ? "<div style='color:#999'>⚡ 本次已抽到过</div>" : ""}
+    <div class="small">分类：${cat}</div>
+    ${isRecorded ? "<div style='color:#ff7b7b'>✔ 已记录</div>" : ""}
+    ${isSession ? "<div style='color:#999'>⚡ 本次已抽过</div>" : ""}
   `;
 
   document.getElementById("currentInfo").innerHTML =
     "当前：" + current.name;
 }
 
-// ========== 保存 ==========
+// ================= 保存 =================
 async function save(){
 
   if(!current){
@@ -261,7 +280,7 @@ async function save(){
   await loadRecords();
 }
 
-// ========== 记录 ==========
+// ================= 渲染记录 =================
 function renderRecords(){
 
   let box = document.getElementById("records");
@@ -279,7 +298,7 @@ function renderRecords(){
   });
 }
 
-// ========== 物料 ==========
+// ================= 物料 =================
 function renderMaterials(){
 
   let key = document.getElementById("search").value || "";
@@ -293,19 +312,12 @@ function renderMaterials(){
 
   list.forEach(m=>{
     box.innerHTML += `
-      <div class="item" onclick="selectMaterial('${m.name}')">
+      <div class="item">
         🎞 ${m.name}<br/>
-        <div class="small">${m.type}</div>
+        <div class="small">${classify(m.name)}</div>
       </div>
     `;
   });
-}
-
-// ========== 点击物料补感想 ==========
-function selectMaterial(name){
-  current = materials.find(m=>m.name===name);
-  document.getElementById("currentInfo").innerHTML =
-    "已选择：" + name;
 }
 
 </script>
