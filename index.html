@@ -92,10 +92,7 @@ input,textarea,select{
   font-size:13px;
 }
 
-.right{
-  display:flex;
-  flex-direction:column;
-}
+.right{display:flex;flex-direction:column;}
 </style>
 </head>
 
@@ -106,35 +103,25 @@ input,textarea,select{
 
 <div class="container">
 
-<!-- ================= 左侧 ================= -->
+<!-- 左 -->
 <div>
 
-  <!-- 抽签 -->
   <div class="card">
     <h3>🎲 抽签系统</h3>
-
     <div class="tagBox" id="typeBox"></div>
-
     <button onclick="draw()">开始抽签</button>
 
     <div class="result" id="result">等待抽签...</div>
   </div>
 
-  <!-- 考古记录 -->
   <div class="card">
     <h3>📚 考古记录</h3>
 
     <div id="currentTitle">当前物料：未选择</div>
 
     <div class="grid2">
-      <div class="box">
-        首次考古<br>
-        <span id="firstDate">-</span>
-      </div>
-      <div class="box">
-        考古次数<br>
-        <span id="count">0</span>
-      </div>
+      <div class="box">首次考古<br><span id="firstDate">-</span></div>
+      <div class="box">考古次数<br><span id="count">0</span></div>
     </div>
 
     <input id="nickname" placeholder="昵称">
@@ -142,13 +129,13 @@ input,textarea,select{
 
     <button onclick="saveRecord()">添加考古记录</button>
 
-    <h4>📌 考古记录列表</h4>
+    <h4>📌 记录列表</h4>
     <div id="recordList"></div>
   </div>
 
 </div>
 
-<!-- ================= 右侧 ================= -->
+<!-- 右 -->
 <div class="right">
 
   <div class="card">
@@ -184,7 +171,7 @@ input,textarea,select{
 <script>
 
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3plcGpwaGxzcGR4Z2drZnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzEyODYsImV4cCI6MjA5NjkwNzI4Nn0.5KJ3dnn1D5PNwTqDM4KfJ5cpOC645GQewL0OgVPBC3o";
+const supabaseKey = "你的anon key";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let materials = [];
@@ -193,37 +180,45 @@ let current = null;
 let selectedType = "全部";
 let session = [];
 
+/* 初始化 */
+init();
+
 async function init(){
   await loadMaterials();
   await loadRecords();
   renderTypes();
   renderStats();
 }
-init();
 
-/* ===== 物料 ===== */
+/* 物料 */
 async function loadMaterials(){
   let {data} = await client.from("materials").select("*");
   materials = data || [];
   renderMaterials();
 }
 
-/* ===== 记录 ===== */
+/* 记录 */
 async function loadRecords(){
-  let {data} = await client.from("records").select("*").order("created_at",{ascending:false});
+  let {data} = await client.from("records")
+    .select("*")
+    .order("created_at",{ascending:false});
+
   records = data || [];
   renderRecords();
+  renderRecordInfo();
+  renderStats();
 }
 
-/* ===== 分类 ===== */
+/* 分类 */
 function renderTypes(){
-  let types = ["全部",...new Set(materials.map(m=>m.type))];
+  let types = ["全部", ...new Set(materials.map(m=>m.type))];
   let box = document.getElementById("typeBox");
   box.innerHTML = "";
 
   types.forEach(t=>{
     box.innerHTML += `
-      <div class="tag ${selectedType===t?'active':''}" onclick="setType('${t}')">
+      <div class="tag ${selectedType===t?'active':''}"
+      onclick="setType('${t}')">
         ${t}
       </div>`;
   });
@@ -234,7 +229,7 @@ function setType(t){
   renderTypes();
 }
 
-/* ===== 抽签 ===== */
+/* 抽签 */
 function draw(){
 
   let pool = materials;
@@ -243,14 +238,12 @@ function draw(){
     pool = materials.filter(m=>m.type===selectedType);
   }
 
-  if(pool.length===0){
+  if(!pool.length){
     alert("该分类没有物料");
     return;
   }
 
   current = pool[Math.floor(Math.random()*pool.length)];
-
-  session.push(current.name);
 
   document.getElementById("result").innerHTML =
     `🍀今天抽到<br><br>${current.name}`;
@@ -261,18 +254,17 @@ function draw(){
   renderRecordInfo();
 }
 
-/* ===== 记录信息 ===== */
+/* 记录信息 */
 function renderRecordInfo(){
 
-  let r = records.filter(x=>x.material_name===current?.name);
+  if(!current) return;
+
+  let r = records.filter(x=>x.material_name===current.name);
 
   document.getElementById("count").innerText = r.length;
 
-  if(r.length>0){
-    document.getElementById("firstDate").innerText = r[r.length-1].created_at.split("T")[0];
-  }else{
-    document.getElementById("firstDate").innerText = "-";
-  }
+  document.getElementById("firstDate").innerText =
+    r.length ? r[0].created_at.split("T")[0] : "-";
 
   let box = document.getElementById("recordList");
   box.innerHTML = "";
@@ -280,14 +272,14 @@ function renderRecordInfo(){
   r.forEach(x=>{
     box.innerHTML += `
       <div class="item">
-        ${x.created_at.split("T")[0]}<br>
-        👤 ${x.user_name}<br>
-        💬 ${x.thought}
+        📅 ${x.created_at.split("T")[0]}<br>
+        👤 ${x.user_name || "-"}<br>
+        💬 ${x.thought || "-"}
       </div>`;
   });
 }
 
-/* ===== 保存记录 ===== */
+/* 保存记录（修复版） */
 async function saveRecord(){
 
   if(!current){
@@ -298,18 +290,27 @@ async function saveRecord(){
   let name = document.getElementById("nickname").value;
   let thought = document.getElementById("thought").value;
 
-  await client.from("records").insert([{
+  const { error } = await client.from("records").insert([{
     material_name: current.name,
     user_name: name,
     thought: thought,
     created_at: new Date().toISOString()
   }]);
 
+  if(error){
+    alert("保存失败");
+    console.log(error);
+    return;
+  }
+
+  document.getElementById("thought").value = "";
+
   await loadRecords();
   renderRecordInfo();
+  renderStats();
 }
 
-/* ===== 物料 ===== */
+/* 物料 */
 function renderMaterials(){
 
   let key = document.getElementById("search").value || "";
@@ -321,26 +322,38 @@ function renderMaterials(){
 
   list.forEach(m=>{
     box.innerHTML += `
-      <div class="item">🎞 ${m.name}<br><span class="small">${m.type}</span></div>
-    `;
+      <div class="item">
+        🎞 ${m.name}<br>
+        <span class="small">${m.type}</span>
+      </div>`;
   });
 }
 
-/* ===== 新增物料 ===== */
+/* 添加物料（修复版） */
 async function addMaterial(){
 
   let name = document.getElementById("newName").value;
   let type = document.getElementById("newType").value;
 
-  await client.from("materials").insert([{name,type}]);
+  const { error } = await client.from("materials").insert([{name,type}]);
+
+  if(error){
+    alert("添加失败");
+    console.log(error);
+    return;
+  }
+
+  document.getElementById("newName").value = "";
 
   await loadMaterials();
   renderTypes();
+  renderMaterials();
   renderStats();
 }
 
-/* ===== 统计 ===== */
+/* 统计 */
 function renderStats(){
+
   document.getElementById("total").innerText = materials.length;
 
   let done = new Set(records.map(r=>r.material_name));
