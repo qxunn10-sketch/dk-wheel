@@ -5,16 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>李米米考古馆</title>
 <style>
+
 :root{
-  --bg:#fff8fb;
+  --bg:#f6fff6;
   --card:#ffffff;
-  --line:#f0dbe4;
-  --pink:#f39abc;
-  --soft:#fff0f6;
+  --line:#d7f5d7;
+  --main:#67c587;
+  --soft:#eaffea;
   --text:#2f2f2f;
-  --muted:#777;
-  --deep:#9d4567;
+  --muted:#666;
 }
+
 *{box-sizing:border-box}
 body{
   margin:0;
@@ -88,6 +89,11 @@ textarea{width:100%;min-height:72px;margin-top:8px;resize:vertical}
 <div class="wrap">
   <h1>🎡 李米米考古馆</h1>
   <div class="sub">今天考古什么呢？</div>
+<div class="row" style="margin-top:8px;">
+  <button onclick="setTheme('green')" class="soft">🍀 四叶草</button>
+  <button onclick="setTheme('pink')" class="soft">🍕 奶油</button>
+</div>
+
 
   <div class="card">
     <div class="row">
@@ -143,7 +149,7 @@ textarea{width:100%;min-height:72px;margin-top:8px;resize:vertical}
       <input id="recordFans" placeholder="兼粉：林、A、B" style="min-width:230px;flex:1;">
     </div>
 
-    <textarea id="recordThought" placeholder="兼粉感想：例如：返场封神、李米米这场状态很好..."></textarea>
+    <textarea id="recordThought" placeholder="感想：例如：返场封神、李米米这场状态很好..."></textarea>
 
     <div class="row" style="margin-top:8px;">
       <button class="primary" id="saveRecordBtn">保存考古记录</button>
@@ -297,9 +303,9 @@ function drawMaterial(){
   const t=document.getElementById('drawType').value;
   const pool=materials.filter(m=>t==='全部'||m.type===t);
   if(!pool.length){alert('这个分类还没有物料');return}
-  current=pool[Math.floor(Math.random()*pool.length)];
+  current=pool[Math.floor(Math.random()*pool.length)]; currentMaterial=current;
   document.getElementById('result').innerText='✨ '+current.title;
-  document.getElementById('resultMeta').innerHTML='<span class="badge">'+emoji(current.type)+' '+current.type+'</span>';
+  document.getElementById('resultMeta').innerHTML='<span class="badge">'+emoji(current.type)+' '+current.type+'</span>'; setTimeout(()=>focusCard(current.title),200);;
 }
 
 function openRecord(){
@@ -387,7 +393,7 @@ function renderArchives(){
       '<div class="log-box">'+
       '<b>第 '+(g.items.length-i)+' 次考古｜📅 '+r.date+'</b>'+
       '<div>🌸 兼粉：'+(r.fans||'未填写')+'</div>'+
-      '<div>💬 兼粉感想：'+(r.thought||'没有填写')+'</div>'+
+      '<div>💬 感想：'+(r.thought||'没有填写')+'</div>'+
       '<div class="small">记录人：'+(r.author||'匿名')+'</div>'+
       '<button class="danger" onclick="deleteRecord(\''+r.id+'\')">删除这条</button>'+
       '</div>'
@@ -446,6 +452,35 @@ document.getElementById('search').addEventListener('input',renderMaterials);
 document.getElementById('filterType').addEventListener('change',renderMaterials);
 
 saveAll();
+
+let currentMaterial = null;
+
+function setTheme(t){
+  if(t==='green'){
+    document.documentElement.style.setProperty('--bg','#f6fff6');
+    document.documentElement.style.setProperty('--line','#d7f5d7');
+    document.documentElement.style.setProperty('--main','#67c587');
+    document.documentElement.style.setProperty('--soft','#eaffea');
+  }
+  if(t==='pink'){
+    document.documentElement.style.setProperty('--bg','#fff8fb');
+    document.documentElement.style.setProperty('--line','#f0dbe4');
+    document.documentElement.style.setProperty('--main','#f39abc');
+    document.documentElement.style.setProperty('--soft','#fff0f6');
+  }
+}
+
+function focusCard(title){
+  const cards=document.querySelectorAll('.archive-card, .item');
+  cards.forEach(c=>{
+    if(c.innerText.includes(title)){
+      c.scrollIntoView({behavior:'smooth',block:'center'});
+      c.style.boxShadow='0 0 0 3px var(--main)';
+      setTimeout(()=>c.style.boxShadow='',1200);
+    }
+  });
+}
+
 </script>
 </body>
 </html>
