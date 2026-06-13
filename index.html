@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆 V9.2</title>
+<title>🍀李米米考古馆 V9.2.1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -15,9 +15,7 @@ body{
   padding:16px;
 }
 
-h1{
-  text-align:center;
-}
+h1{text-align:center}
 
 .card{
   background:white;
@@ -45,7 +43,7 @@ input,textarea{
 }
 
 #result{
-  font-size:20px;
+  font-size:18px;
   margin-top:10px;
 }
 </style>
@@ -53,12 +51,12 @@ input,textarea{
 
 <body>
 
-<h1>🍀李米米考古馆 V9.2</h1>
+<h1>🍀李米米考古馆 V9.2.1</h1>
 <p style="text-align:center">🍕今天看什么呢？</p>
 
 <div class="card">
 <button onclick="draw()">🎲 抽签</button>
-<div id="result">等待抽签...</div>
+<div id="result">正在加载物料...</div>
 </div>
 
 <div class="card">
@@ -77,69 +75,87 @@ input,textarea{
 
 <script>
 
-// ====== Supabase ======
+// ================== Supabase ==================
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
-const supabaseKey = "你的anon key（保留你自己的）";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3plcGpwaGxzcGR4Z2drZnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzEyODYsImV4cCI6MjA5NjkwNzI4Nn0.5KJ3dnn1D5PNwTqDM4KfJ5cpOC645GQewL0OgVPBC3o";
 
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-let currentMaterial = null;
+// ================== 状态 ==================
+let materials = [];
+let current = null;
+let isLoaded = false;
 
-// ====== 🎲 抽签（V9.2升级版） ======
-async function draw(){
+// ================== 加载物料 ==================
+async function loadMaterials() {
 
-  const { data, error } = await client
-    .from("materials")
-    .select("*");
+  try {
+    const { data, error } = await client
+      .from("materials")
+      .select("*");
 
-  if(error){
-    alert("获取物料失败");
-    return;
+    if (error) throw error;
+
+    materials = data || [];
+    isLoaded = true;
+
+    document.getElementById("result").innerHTML =
+      "🍀 已加载 " + materials.length + " 个物料，可以抽签啦";
+
+  } catch (err) {
+    console.log(err);
+    document.getElementById("result").innerHTML =
+      "❌ 物料加载失败";
   }
-
-  if(!data || data.length === 0){
-    alert("没有物料");
-    return;
-  }
-
-  const item = data[Math.floor(Math.random() * data.length)];
-
-  currentMaterial = item;
-
-  document.getElementById("result").innerHTML =
-    "🍀 本次考古：" + item.name + "（" + item.type + "）";
 }
 
-// ====== 💾 保存记录（V9.2） ======
-async function save(){
+loadMaterials();
 
-  const name = document.getElementById("name").value;
-  const thought = document.getElementById("thought").value;
+// ================== 抽签 ==================
+function draw() {
 
-  if(!currentMaterial){
-    alert("先抽一个物料！");
+  if (!isLoaded || materials.length === 0) {
+    alert("物料还没加载好");
     return;
   }
 
-  const { error } = await client.from("records").insert([{
-    material_id: currentMaterial.id,
-    material_name: currentMaterial.name,
-    user_name: name,
-    thought: thought,
-    created_at: new Date().toISOString()
-  }]);
+  current = materials[Math.floor(Math.random() * materials.length)];
 
-  if(error){
+  document.getElementById("result").innerHTML =
+    "✨ 本次考古：" + current.name + "（" + current.type + "）";
+}
+
+// ================== 保存记录 ==================
+async function save() {
+
+  const name = document.getElementById("name").value.trim();
+  const thought = document.getElementById("thought").value.trim();
+
+  if (!current) {
+    alert("请先抽签");
+    return;
+  }
+
+  const { error } = await client.from("records").insert([
+    {
+      material_name: current.name,
+      user_name: name || "匿名",
+      thought: thought || "",
+      created_at: new Date().toISOString()
+    }
+  ]);
+
+  if (error) {
     alert("保存失败");
     return;
   }
 
-  document.getElementById("thought").value = "";
-  load();
+  alert("已记录🍀");
+  loadRecords();
 }
 
-// ====== 📚 加载资料卡 ======
-async function load(){
+// ================== 加载记录 ==================
+async function loadRecords() {
 
   const { data } = await client
     .from("records")
@@ -150,19 +166,19 @@ async function load(){
 
   data.forEach(r => {
     html += `
-    <div class="card">
-      <b>📦 ${r.material_name}</b><br/>
-      👤 ${r.user_name}<br/>
-      💬 ${r.thought}<br/>
-      📅 ${new Date(r.created_at).toLocaleString()}
-    </div>
+      <div class="card">
+        <b>🎬 ${r.material_name}</b><br/>
+        👤 ${r.user_name}<br/>
+        💬 ${r.thought}<br/>
+        📅 ${new Date(r.created_at).toLocaleString()}
+      </div>
     `;
   });
 
   document.getElementById("list").innerHTML = html;
 }
 
-load();
+loadRecords();
 
 </script>
 
