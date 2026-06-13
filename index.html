@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆 V11</title>
+<title>🍀李米米考古馆 V12</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -16,26 +16,24 @@ body{
 
 h1{
   text-align:center;
-  margin:20px 0;
+  margin:20px;
 }
 
 .container{
   display:grid;
-  grid-template-columns: 1.2fr 1fr 1.3fr;
+  grid-template-columns:1.2fr 1fr 1.3fr;
   gap:16px;
   padding:16px;
 }
 
-/* 卡片 */
 .card{
   background:white;
-  border-radius:16px;
   padding:14px;
+  border-radius:16px;
   box-shadow:0 4px 12px rgba(0,0,0,0.06);
   margin-bottom:12px;
 }
 
-/* 按钮 */
 button{
   padding:10px 14px;
   border:none;
@@ -45,7 +43,6 @@ button{
   cursor:pointer;
 }
 
-/* 输入 */
 input,select,textarea{
   width:100%;
   margin-top:8px;
@@ -54,51 +51,58 @@ input,select,textarea{
   border:1px solid #ddd;
 }
 
-/* 抽签结果 */
 .result{
   margin-top:12px;
-  padding:20px;
-  border-radius:16px;
+  padding:18px;
+  border-radius:14px;
   background:linear-gradient(135deg,#e6f9ed,#f6fff6);
   text-align:center;
 }
-.result h2{
-  margin:0;
-  font-size:26px;
+
+.tagBox{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-bottom:10px;
 }
 
-/* 物料条目 */
+.tag{
+  padding:6px 10px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  background:#e8f5ee;
+  font-size:12px;
+}
+
+.tag.active{
+  background:#4caf50;
+  color:white;
+}
+
 .item{
   padding:8px;
   border-bottom:1px solid #eee;
   font-size:14px;
+  cursor:pointer;
 }
-.small{
-  font-size:12px;
-  color:#777;
-}
+.small{color:#777;font-size:12px;}
 </style>
 </head>
 
 <body>
 
-<h1>🍀李米米考古馆 V11</h1>
+<h1>🍀李米米考古馆 V12</h1>
 
 <div class="container">
 
-<!-- ================= 左：抽签 ================= -->
+<!-- ========== 左：抽签 ========== -->
 <div>
 
 <div class="card">
 <h3>🎲 抽签系统</h3>
 
-<select id="type">
-  <option value="全部">全部</option>
-  <option value="舞台">舞台</option>
-  <option value="综艺">综艺</option>
-  <option value="直播">直播</option>
-  <option value="电台">电台</option>
-</select>
+<div id="typeBox" class="tagBox"></div>
 
 <button onclick="draw()">开始抽签</button>
 
@@ -107,31 +111,29 @@ input,select,textarea{
 
 <div class="card">
 <h3>📝 当前记录</h3>
+
 <div id="currentInfo">未选择</div>
 
 <input id="name" placeholder="昵称">
 <textarea id="thought" placeholder="感想"></textarea>
+
 <button onclick="save()">保存记录</button>
 </div>
 
 </div>
 
-<!-- ================= 中：记录 ================= -->
-<div>
-
+<!-- ========== 中：记录 ========== -->
 <div class="card">
 <h3>📚 考古记录</h3>
 <div id="records"></div>
 </div>
 
-</div>
-
-<!-- ================= 右：物料库 ================= -->
+<!-- ========== 右：物料 ========== -->
 <div>
 
 <div class="card">
 <h3>🔍 物料搜索</h3>
-<input id="search" placeholder="搜索物料..." oninput="renderMaterials()">
+<input id="search" oninput="renderMaterials()" placeholder="搜索物料">
 </div>
 
 <div class="card">
@@ -145,7 +147,6 @@ input,select,textarea{
 
 <script>
 
-// ========== Supabase ==========
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
 const supabaseKey = "你的anon key";
 
@@ -155,11 +156,14 @@ const client = supabase.createClient(supabaseUrl, supabaseKey);
 let materials = [];
 let records = [];
 let current = null;
+let selectedType = "全部";
+let sessionDrawn = [];
 
 // ========== 初始化 ==========
 async function init(){
   await loadMaterials();
   await loadRecords();
+  renderTypes();
 }
 init();
 
@@ -172,20 +176,45 @@ async function loadMaterials(){
 
 // ========== 记录 ==========
 async function loadRecords(){
-  const { data } = await client.from("records").select("*").order("created_at",{ascending:false});
+  const { data } = await client.from("records")
+    .select("*")
+    .order("created_at",{ascending:false});
+
   records = data || [];
   renderRecords();
+}
+
+// ========== 分类自动生成 ==========
+function renderTypes(){
+  let types = ["全部", ...new Set(materials.map(m=>m.type).filter(Boolean))];
+
+  let box = document.getElementById("typeBox");
+  box.innerHTML = "";
+
+  types.forEach(t=>{
+    box.innerHTML += `
+      <button class="tag ${selectedType===t?'active':''}"
+      onclick="selectType('${t}')">
+        ${t}
+      </button>
+    `;
+  });
+}
+
+function selectType(t){
+  selectedType = t;
+  renderTypes();
 }
 
 // ========== 抽签 ==========
 function draw(){
 
-  let type = document.getElementById("type").value;
-
   let pool = materials;
 
-  if(type !== "全部"){
-    pool = materials.filter(m => (m.type||"").includes(type));
+  if(selectedType !== "全部"){
+    pool = materials.filter(m =>
+      (m.type||"").includes(selectedType)
+    );
   }
 
   if(pool.length === 0){
@@ -196,11 +225,15 @@ function draw(){
   current = pool[Math.floor(Math.random()*pool.length)];
 
   let isRecorded = records.some(r => r.material_name === current.name);
+  let isSession = sessionDrawn.includes(current.name);
+
+  sessionDrawn.push(current.name);
 
   document.getElementById("result").innerHTML = `
     <h2>${current.name}</h2>
     <div class="small">分类：${current.type}</div>
-    ${isRecorded ? "<div style='color:#ff7b7b'>已记录过</div>" : ""}
+    ${isRecorded ? "<div style='color:#ff7b7b'>✔ 你记录过这个</div>" : ""}
+    ${isSession ? "<div style='color:#999'>⚡ 本次已抽到过</div>" : ""}
   `;
 
   document.getElementById("currentInfo").innerHTML =
@@ -211,29 +244,24 @@ function draw(){
 async function save(){
 
   if(!current){
-    alert("先抽签");
+    alert("请先抽签");
     return;
   }
 
   const name = document.getElementById("name").value;
   const thought = document.getElementById("thought").value;
 
-  const { error } = await client.from("records").insert([{
+  await client.from("records").insert([{
     material_name: current.name,
     user_name: name,
     thought: thought,
     created_at: new Date().toISOString()
   }]);
 
-  if(error){
-    alert("保存失败");
-    return;
-  }
-
   await loadRecords();
 }
 
-// ========== 渲染记录 ==========
+// ========== 记录 ==========
 function renderRecords(){
 
   let box = document.getElementById("records");
@@ -251,7 +279,7 @@ function renderRecords(){
   });
 }
 
-// ========== 渲染物料 ==========
+// ========== 物料 ==========
 function renderMaterials(){
 
   let key = document.getElementById("search").value || "";
@@ -265,12 +293,19 @@ function renderMaterials(){
 
   list.forEach(m=>{
     box.innerHTML += `
-      <div class="item">
+      <div class="item" onclick="selectMaterial('${m.name}')">
         🎞 ${m.name}<br/>
         <div class="small">${m.type}</div>
       </div>
     `;
   });
+}
+
+// ========== 点击物料补感想 ==========
+function selectMaterial(name){
+  current = materials.find(m=>m.name===name);
+  document.getElementById("currentInfo").innerHTML =
+    "已选择：" + name;
 }
 
 </script>
