@@ -3,41 +3,49 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆 V9.2.1</title>
+<title>🍀李米米考古馆 V10</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 body{
-  font-family: Arial;
-  background:#f6fff6;
   margin:0;
+  font-family: Arial;
+  background:#f5fff6;
+}
+
+.container{
+  display:flex;
+  gap:12px;
   padding:16px;
 }
 
-h1{text-align:center}
+.left,.right{
+  flex:1;
+}
 
 .card{
   background:white;
   padding:12px;
   border-radius:12px;
-  margin:12px 0;
+  margin-bottom:12px;
   box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
 
 button{
-  padding:10px 14px;
-  border:none;
-  border-radius:10px;
   background:#67c587;
   color:white;
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
   cursor:pointer;
+  margin:4px;
 }
 
 input,textarea{
   width:100%;
-  margin-top:6px;
   padding:8px;
+  margin-top:6px;
   border-radius:8px;
   border:1px solid #ddd;
 }
@@ -46,97 +54,162 @@ input,textarea{
   font-size:18px;
   margin-top:10px;
 }
+
+.tag{
+  display:inline-block;
+  padding:3px 8px;
+  background:#e8f7ea;
+  border-radius:8px;
+  margin-left:6px;
+  font-size:12px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🍀李米米考古馆 V9.2.1</h1>
-<p style="text-align:center">🍕今天看什么呢？</p>
+<div class="container">
+
+<!-- ================= 左侧 ================= -->
+<div class="left">
+
+<h2>🍀考古抽签</h2>
 
 <div class="card">
-<button onclick="draw()">🎲 抽签</button>
-<div id="result">正在加载物料...</div>
+<button onclick="draw('全部')">🎲 全部</button>
+<button onclick="draw('舞台/花絮')">🎭 舞台</button>
+<button onclick="draw('电台')">📻 电台</button>
+<button onclick="draw('综艺')">📺 综艺</button>
+<button onclick="draw('直播')">📡 直播</button>
+
+<div id="result">等待抽签...</div>
 </div>
 
 <div class="card">
 <h3>📝 添加考古记录</h3>
-
-<input id="name" placeholder="你的昵称"/>
+<input id="name" placeholder="昵称"/>
 <textarea id="thought" placeholder="感想"></textarea>
-
-<button onclick="save()">💾 保存记录</button>
+<button onclick="save()">💾 保存</button>
 </div>
 
 <div class="card">
-<h3>📚 考古资料卡</h3>
-<div id="list"></div>
+<h3>📚 考古记录</h3>
+<div id="records"></div>
+</div>
+
+</div>
+
+<!-- ================= 右侧 ================= -->
+<div class="right">
+
+<h2>📦 物料库</h2>
+
+<div class="card">
+<input id="search" placeholder="搜索物料..." oninput="renderMaterials()"/>
+</div>
+
+<div class="card">
+<div id="materials"></div>
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-// ================== Supabase ==================
+// ================= Supabase =================
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3plcGpwaGxzcGR4Z2drZnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzEyODYsImV4cCI6MjA5NjkwNzI4Nn0.5KJ3dnn1D5PNwTqDM4KfJ5cpOC645GQewL0OgVPBC3o";
-
+const supabaseKey = "你的anon key";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-// ================== 状态 ==================
+// ================= 数据 =================
 let materials = [];
 let current = null;
-let isLoaded = false;
+let used = new Set();
 
-// ================== 加载物料 ==================
-async function loadMaterials() {
+// ================= 加载物料 =================
+async function loadMaterials(){
 
-  try {
-    const { data, error } = await client
-      .from("materials")
-      .select("*");
+  const { data } = await client
+    .from("materials")
+    .select("*");
 
-    if (error) throw error;
-
-    materials = data || [];
-    isLoaded = true;
-
-    document.getElementById("result").innerHTML =
-      "🍀 已加载 " + materials.length + " 个物料，可以抽签啦";
-
-  } catch (err) {
-    console.log(err);
-    document.getElementById("result").innerHTML =
-      "❌ 物料加载失败";
-  }
+  materials = data || [];
+  renderMaterials();
 }
 
 loadMaterials();
 
-// ================== 抽签 ==================
-function draw() {
+// ================= 渲染物料 =================
+function renderMaterials(){
 
-  if (!isLoaded || materials.length === 0) {
-    alert("物料还没加载好");
-    return;
-  }
+  const key = document.getElementById("search").value || "";
 
-  current = materials[Math.floor(Math.random() * materials.length)];
+  let list = materials.filter(m =>
+    m.name.includes(key)
+  );
 
-  document.getElementById("result").innerHTML =
-    "✨ 本次考古：" + current.name + "（" + current.type + "）";
+  let html = "";
+
+  list.forEach(m=>{
+    html += `
+      <div class="card">
+        🎬 ${m.name}
+        <span class="tag">${m.type}</span><br/>
+        <button onclick="selectMaterial('${m.id}')">选择</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("materials").innerHTML = html;
 }
 
-// ================== 保存记录 ==================
-async function save() {
+// ================= 选择物料 =================
+function selectMaterial(id){
+  current = materials.find(m=>m.id === id);
 
-  const name = document.getElementById("name").value.trim();
-  const thought = document.getElementById("thought").value.trim();
+  document.getElementById("result").innerHTML =
+    "📌 当前：" + current.name +
+    "<br/>📁 " + current.type;
+}
 
-  if (!current) {
-    alert("请先抽签");
+// ================= 抽签 =================
+function draw(type){
+
+  let pool = materials;
+
+  if(type !== "全部"){
+    pool = materials.filter(m => m.type === type);
+  }
+
+  pool = pool.filter(m => !used.has(m.id));
+
+  if(pool.length === 0){
+    alert("这个分类已经抽完了！");
     return;
   }
 
-  const { error } = await client.from("records").insert([
+  current = pool[Math.floor(Math.random()*pool.length)];
+  used.add(current.id);
+
+  document.getElementById("result").innerHTML =
+    "✨ 抽到：" + current.name +
+    "<br/>📁 " + current.type;
+}
+
+// ================= 保存记录 =================
+async function save(){
+
+  const name = document.getElementById("name").value;
+  const thought = document.getElementById("thought").value;
+
+  if(!current){
+    alert("先选/抽一个物料");
+    return;
+  }
+
+  await client.from("records").insert([
     {
       material_name: current.name,
       user_name: name || "匿名",
@@ -145,29 +218,24 @@ async function save() {
     }
   ]);
 
-  if (error) {
-    alert("保存失败");
-    return;
-  }
-
-  alert("已记录🍀");
   loadRecords();
+  alert("已保存🍀");
 }
 
-// ================== 加载记录 ==================
-async function loadRecords() {
+// ================= 加载记录 =================
+async function loadRecords(){
 
   const { data } = await client
     .from("records")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at",{ascending:false});
 
   let html = "";
 
-  data.forEach(r => {
+  data.forEach(r=>{
     html += `
       <div class="card">
-        <b>🎬 ${r.material_name}</b><br/>
+        🎬 ${r.material_name}<br/>
         👤 ${r.user_name}<br/>
         💬 ${r.thought}<br/>
         📅 ${new Date(r.created_at).toLocaleString()}
@@ -175,7 +243,7 @@ async function loadRecords() {
     `;
   });
 
-  document.getElementById("list").innerHTML = html;
+  document.getElementById("records").innerHTML = html;
 }
 
 loadRecords();
