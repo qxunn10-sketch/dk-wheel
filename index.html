@@ -1,220 +1,146 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh">
 <head>
-<meta charset="UTF-8"/>
+<meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆</title>
+<title>🍀李米米考古馆 V9.1</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
-:root{
-  --bg:#f6fff6;
-  --card:#ffffff;
-  --line:#d7f5d7;
-  --main:#67c587;
-  --soft:#eaffea;
-  --text:#2f2f2f;
-  --muted:#666;
-}
-
 body{
+  font-family: Arial;
+  background:#f6fff6;
   margin:0;
   padding:16px;
-  background:var(--bg);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei";
-  color:var(--text);
 }
 
-.wrap{max-width:1000px;margin:auto}
-
-h1{text-align:center;margin:10px 0 0;font-size:34px}
-.sub{text-align:center;color:var(--muted);margin-bottom:10px}
+h1{text-align:center}
 
 .card{
-  background:#fff;
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:14px;
-  margin:12px 0;
-}
-
-.row{display:flex;gap:10px;flex-wrap:wrap}
-
-button,input,select,textarea{
-  padding:10px;
-  border-radius:10px;
-  border:1px solid var(--line);
-  font:inherit;
-}
-
-.primary{background:var(--main);color:#fff;border:none}
-
-#result{
-  font-size:26px;
-  font-weight:800;
-  text-align:center;
-  margin:10px 0;
-}
-
-.badge{background:var(--soft);padding:4px 8px;border-radius:999px}
-
-.archive{
-  border:1px solid var(--line);
+  background:white;
   padding:12px;
   border-radius:12px;
-  margin:10px 0;
+  margin:12px 0;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
 
-.small{font-size:12px;color:var(--muted)}
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#67c587;
+  color:white;
+}
+
+input,textarea{
+  width:100%;
+  margin-top:6px;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+
+#result{font-size:18px;margin-top:10px}
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
-
-<h1>🍀李米米考古馆</h1>
-<div class="sub">🍕 今天看什么呢</div>
+<h1>🍀李米米考古馆 V9.1</h1>
+<p style="text-align:center">🍕今天看什么呢？</p>
 
 <div class="card">
-  <div class="row">
-    <button onclick="draw()">🎲 抽签</button>
-    <div id="result">等待抽取</div>
-  </div>
+<button onclick="draw()">🎲 抽签</button>
+<div id="result">等待抽签...</div>
 </div>
 
 <div class="card">
-<h3>📅 记录</h3>
+<h3>📝 添加考古记录</h3>
 
-<input id="title" placeholder="物料"/>
-<input id="date" type="date"/>
-<input id="fans" placeholder="兼粉：林 A B"/>
+<input id="name" placeholder="昵称"/>
 <textarea id="thought" placeholder="感想"></textarea>
-<br/>
-<button class="primary" onclick="save()">保存记录</button>
+
+<button onclick="save()">保存记录</button>
 </div>
 
 <div class="card">
-<h3>📚 资料卡</h3>
+<h3>📚 考古资料卡</h3>
 <div id="list"></div>
-</div>
-
 </div>
 
 <script>
 
-const materials = [
-"130817 SVT 2nd Show LIKE SEVENTEEN",
-"160214 boys wish",
-"2016 Boys wish花絮",
-"2016 Shining Diamond首尔",
-"22016 shining diamond首尔制作花絮",
-"2016 shining diamond日本",
-"170221 Say the name横滨",
-"2017Diamond Edge韩国",
-"2017 Diamond edge日本",
-"2017 Diamond Edge花絮",
-"180221 Arena SVT",
-"180531日本出道Showcase We Make You",
-"180701 IDEAL CUT韩D4",
-"IDEAL CUT花絮",
-"180909 IDEAL CUT日本",
-"181007 summer camp",
-"181103 IDEAL CUT安可场",
-"2019 Happy Ending Showcase",
-"190419 HARU",
-"190609 HANA",
-"190901 ODE TO YOU 首尔D3",
-"2019 ODE TO YOU 日本场",
-"200830 克拉岛",
-"201108 24H release event",
-"210427 HARE",
-"210808 克拉岛",
-"211225 Power of Love日本圣诞FM",
-"22克拉岛D1",
-"22克拉岛D2",
-"220508 Hanabi",
-"Hanabi making film幕后花絮",
-"220625 BE THE SUN首尔D1",
-"220626 BE THE SUN首尔D2",
-"221127 BE THE SUN东京D2",
-"220825 BE THE SUN芝加哥舞台纯享",
-"23克拉岛D1",
-"23克拉岛D2",
-"23克拉岛D3",
-"230528 LOVE东京/多视角",
-"230518 LOVE大阪/多视角",
-"24克拉岛D1",
-"24克拉岛D2",
-"25克拉岛D1",
-"25克拉岛D2",
+// 🔑 Supabase
+const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
+const supabaseKey = "你刚刚那个anon key";
 
-"150703 Kiss The Radio",
-"160501 Kiss The Radio",
-"170609 NCT night night 电台",
-"180330 Hongkira 电台",
-"180322 金昌烈 old school 电台",
-"190926 young street 电台",
-"201022 入坑广场电台",
-"200629 李准 young street",
-"230211 Love game 电台",
-"160619 Kiss The Radio",
-"160703 Kiss The Radio",
+const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-"160619 My Little TV",
-"171121 妈妈睡着后",
-"180609 SVT TV",
-"180317 K WORLD",
-"180331 SVT Special",
-"AmigoTV",
-"180131 AmigoTV",
-"Dispatch Mind",
-"191221 SVT寒假",
-"NewsAde合集",
-"文明快车",
-"SVT学校",
-"200614 阴森课外辅导",
-"220325 D'FESTA",
+let currentMaterial = "";
 
-"200308 耳待耳待71",
-"200429 耳待耳待77",
-"200528 耳待耳待81",
-"200725 突袭V"
-];
+// 🎲 从数据库抽签（关键升级点）
+async function draw(){
 
-let cur=null;
-let records = JSON.parse(localStorage.getItem("lm")||"[]");
+  let { data } = await client.from("materials").select("*");
 
-function draw(){
-cur = materials[Math.floor(Math.random()*materials.length)];
-document.getElementById("result").innerText = cur;
-document.getElementById("title").value = cur;
+  if(!data || data.length === 0){
+    alert("没有物料");
+    return;
+  }
+
+  currentMaterial = data[Math.floor(Math.random()*data.length)].name;
+
+  document.getElementById("result").innerHTML =
+    "✨ 本次考古：" + currentMaterial;
 }
 
-function save(){
-const obj={
-title:document.getElementById("title").value,
-date:document.getElementById("date").value,
-fans:document.getElementById("fans").value,
-thought:document.getElementById("thought").value
-};
-records.push(obj);
-localStorage.setItem("lm",JSON.stringify(records));
-render();
+// 💾 保存记录
+async function save(){
+
+  const name = document.getElementById("name").value;
+  const thought = document.getElementById("thought").value;
+
+  if(!currentMaterial){
+    alert("先抽签！");
+    return;
+  }
+
+  await client.from("records").insert([{
+    material_name: currentMaterial,
+    user_name: name,
+    thought: thought,
+    created_at: new Date().toISOString()
+  }]);
+
+  load();
 }
 
-function render(){
-document.getElementById("list").innerHTML =
-records.map(r=>
-`<div class='archive'>
-<b>${r.title}</b><br/>
-📅 ${r.date}<br/>
-👥 ${r.fans}<br/>
-💬 ${r.thought}
-</div>`
-).join("");
+// 📚 加载资料卡（实时）
+async function load(){
+
+  let { data } = await client
+    .from("records")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  let html = "";
+
+  data.forEach(r=>{
+    html += `
+      <div class="card">
+        <b>🎬 ${r.material_name}</b><br/>
+        👤 ${r.user_name}<br/>
+        💬 ${r.thought}<br/>
+        📅 ${new Date(r.created_at).toLocaleString()}
+      </div>
+    `;
+  });
+
+  document.getElementById("list").innerHTML = html;
 }
 
-render();
+load();
 
 </script>
 
