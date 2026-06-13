@@ -3,34 +3,31 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆 V12.1</title>
+<title>🍀考古馆 V1</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 body{
   margin:0;
-  font-family: Arial;
+  font-family:Arial;
   background:#f4fff6;
 }
 
-h1{
-  text-align:center;
-  margin:20px;
-}
+h1{text-align:center;margin:20px;}
 
 .container{
   display:grid;
-  grid-template-columns:1.2fr 1fr 1.3fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:16px;
   padding:16px;
 }
 
 .card{
-  background:white;
+  background:#fff;
   padding:14px;
-  border-radius:16px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.06);
+  border-radius:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
   margin-bottom:12px;
 }
 
@@ -43,7 +40,7 @@ button{
   cursor:pointer;
 }
 
-input,select,textarea{
+input,textarea{
   width:100%;
   margin-top:8px;
   padding:10px;
@@ -51,236 +48,188 @@ input,select,textarea{
   border:1px solid #ddd;
 }
 
-.result{
-  margin-top:12px;
-  padding:18px;
-  border-radius:14px;
-  background:linear-gradient(135deg,#e6f9ed,#f6fff6);
-  text-align:center;
-}
-
-.tagBox{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-bottom:10px;
-}
-
 .tag{
-  padding:6px 10px;
-  border-radius:20px;
-  border:none;
-  cursor:pointer;
+  display:inline-block;
+  padding:5px 10px;
   background:#e8f5ee;
-  font-size:12px;
+  border-radius:20px;
+  margin:3px;
+  cursor:pointer;
 }
 
 .tag.active{
   background:#4caf50;
-  color:white;
+  color:#fff;
 }
 
 .item{
   padding:8px;
   border-bottom:1px solid #eee;
   font-size:14px;
-  cursor:pointer;
 }
-.small{color:#777;font-size:12px;}
+
+.small{font-size:12px;color:#777;}
+
+.result{
+  padding:15px;
+  background:#eaf9ef;
+  border-radius:12px;
+  text-align:center;
+  margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🍀李米米考古馆 V12.1</h1>
+<h1>🍀考古馆 V1（重构版）</h1>
 
 <div class="container">
 
-<!-- ========== 左：抽签 ========== -->
+<!-- 左 -->
 <div>
+  <div class="card">
+    <h3>🎲 抽签</h3>
+    <div id="tags"></div>
+    <button onclick="draw()">开始抽签</button>
+    <div class="result" id="result">等待抽签...</div>
+  </div>
 
+  <div class="card">
+    <h3>📝 当前</h3>
+    <div id="current">未选择</div>
+    <textarea id="thought" placeholder="感想"></textarea>
+    <button onclick="save()">保存</button>
+  </div>
+</div>
+
+<!-- 中 -->
 <div class="card">
-<h3>🎲 抽签系统</h3>
-
-<div id="typeBox" class="tagBox"></div>
-
-<button onclick="draw()">开始抽签</button>
-
-<div class="result" id="result">等待抽签...</div>
+  <h3>📚 记录</h3>
+  <div id="records"></div>
 </div>
 
+<!-- 右 -->
 <div class="card">
-<h3>📝 当前记录</h3>
-
-<div id="currentInfo">未选择</div>
-
-<input id="name" placeholder="昵称">
-<textarea id="thought" placeholder="感想"></textarea>
-
-<button onclick="save()">保存记录</button>
-</div>
-
-</div>
-
-<!-- ========== 中：记录 ========== -->
-<div class="card">
-<h3>📚 考古记录</h3>
-<div id="records"></div>
-</div>
-
-<!-- ========== 右：物料 ========== -->
-<div>
-
-<div class="card">
-<h3>🔍 物料搜索</h3>
-<input id="search" oninput="renderMaterials()" placeholder="搜索物料">
-</div>
-
-<div class="card">
-<h3>📦 物料库</h3>
-<div id="materials"></div>
-</div>
-
+  <h3>📦 物料</h3>
+  <input id="search" oninput="renderMaterials()" placeholder="搜索">
+  <div id="materials"></div>
 </div>
 
 </div>
 
 <script>
 
-// ================= Supabase =================
+// ========== Supabase ==========
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
-const supabaseKey = "你的anon key";
-const client = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseKey = "填你的anon key";
+const client = supabase.createClient(supabaseUrl,supabaseKey);
 
-// ================= 数据 =================
+// ========== 数据 ==========
 let materials = [];
 let records = [];
 let current = null;
-let selectedType = "全部";
-let sessionDrawn = [];
+let type = "全部";
 
-// ================= 分类函数（核心稳定） =================
-function classify(name=""){
+// ========== 分类（最稳定版） ==========
+function getType(name){
+  name = (name||"").toLowerCase();
 
-  name = name.toLowerCase();
-
-  if(name.includes("直播")) return "直播";
-  if(name.includes("radio") || name.includes("电台") || name.includes("kiss")) return "电台";
-  if(name.includes("show") || name.includes("going")) return "综艺";
-  if(name.includes("tour") || name.includes("be the sun") || name.includes("ideal") || name.includes("ode")) return "舞台";
+  if(name.includes("live")) return "直播";
+  if(name.includes("radio")) return "电台";
+  if(name.includes("show")) return "综艺";
+  if(name.includes("tour") || name.includes("be the sun")) return "舞台";
 
   return "其他";
 }
 
-// ================= 初始化 =================
+// ========== 初始化 ==========
+init();
+
 async function init(){
   await loadMaterials();
   await loadRecords();
-  renderTypes();
+  renderTags();
 }
-init();
 
-// ================= 加载物料 =================
+// ========== 数据 ==========
 async function loadMaterials(){
   const { data } = await client.from("materials").select("*");
   materials = data || [];
   renderMaterials();
 }
 
-// ================= 加载记录 =================
 async function loadRecords(){
-  const { data } = await client
-    .from("records")
-    .select("*")
-    .order("created_at",{ascending:false});
-
+  const { data } = await client.from("records").select("*").order("created_at",{ascending:false});
   records = data || [];
   renderRecords();
 }
 
-// ================= 分类按钮 =================
-function renderTypes(){
+// ========== 标签 ==========
+function renderTags(){
 
-  const types = ["全部","舞台","综艺","直播","电台","其他"];
+  let list = ["全部","舞台","综艺","直播","电台","其他"];
 
-  let box = document.getElementById("typeBox");
+  let box = document.getElementById("tags");
   box.innerHTML = "";
 
-  types.forEach(t=>{
+  list.forEach(t=>{
     box.innerHTML += `
-      <button class="tag ${selectedType===t?'active':''}"
-      onclick="selectType('${t}')">
+      <span class="tag ${type===t?'active':''}" onclick="setType('${t}')">
         ${t}
-      </button>
+      </span>
     `;
   });
 }
 
-function selectType(t){
-  selectedType = t;
-  renderTypes();
+function setType(t){
+  type = t;
+  renderTags();
 }
 
-// ================= 抽签（完全修复版） =================
+// ========== 抽签 ==========
 function draw(){
 
   let pool = materials;
 
-  if(selectedType !== "全部"){
-    pool = materials.filter(m =>
-      classify(m.name) === selectedType
-    );
+  if(type !== "全部"){
+    pool = materials.filter(m => getType(m.name) === type);
   }
 
   if(pool.length === 0){
-    alert("该分类没有物料（请检查数据）");
+    alert("该分类没有物料");
     return;
   }
 
   current = pool[Math.floor(Math.random()*pool.length)];
 
-  let cat = classify(current.name);
+  document.getElementById("result").innerHTML =
+    "✨ " + current.name + "<br><small>" + getType(current.name) + "</small>";
 
-  let isRecorded = records.some(r =>
-    r.material_name === current.name
-  );
-
-  let isSession = sessionDrawn.includes(current.name);
-  sessionDrawn.push(current.name);
-
-  document.getElementById("result").innerHTML = `
-    <h2>${current.name}</h2>
-    <div class="small">分类：${cat}</div>
-    ${isRecorded ? "<div style='color:#ff7b7b'>✔ 已记录</div>" : ""}
-    ${isSession ? "<div style='color:#999'>⚡ 本次已抽过</div>" : ""}
-  `;
-
-  document.getElementById("currentInfo").innerHTML =
-    "当前：" + current.name;
+  document.getElementById("current").innerText =
+    current.name;
 }
 
-// ================= 保存 =================
+// ========== 保存 ==========
 async function save(){
 
   if(!current){
-    alert("请先抽签");
+    alert("先抽签");
     return;
   }
 
-  const name = document.getElementById("name").value;
   const thought = document.getElementById("thought").value;
 
   await client.from("records").insert([{
     material_name: current.name,
-    user_name: name,
-    thought: thought,
+    thought,
     created_at: new Date().toISOString()
   }]);
 
   await loadRecords();
 }
 
-// ================= 渲染记录 =================
+// ========== 记录 ==========
 function renderRecords(){
 
   let box = document.getElementById("records");
@@ -290,21 +239,19 @@ function renderRecords(){
     box.innerHTML += `
       <div class="item">
         🎬 ${r.material_name}<br/>
-        👤 ${r.user_name}<br/>
-        💬 ${r.thought||""}<br/>
-        <div class="small">${new Date(r.created_at).toLocaleString()}</div>
+        💬 ${r.thought||""}
       </div>
     `;
   });
 }
 
-// ================= 物料 =================
+// ========== 物料 ==========
 function renderMaterials(){
 
-  let key = document.getElementById("search").value || "";
+  let key = document.getElementById("search").value;
 
   let list = materials.filter(m =>
-    m.name.includes(key)
+    (m.name||"").includes(key)
   );
 
   let box = document.getElementById("materials");
@@ -313,8 +260,8 @@ function renderMaterials(){
   list.forEach(m=>{
     box.innerHTML += `
       <div class="item">
-        🎞 ${m.name}<br/>
-        <div class="small">${classify(m.name)}</div>
+        🎞 ${m.name}<br>
+        <span class="small">${getType(m.name)}</span>
       </div>
     `;
   });
