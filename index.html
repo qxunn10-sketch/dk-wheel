@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀李米米考古馆 V9.1</title>
+<title>🍀李米米考古馆 V9.2</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
@@ -15,7 +15,9 @@ body{
   padding:16px;
 }
 
-h1{text-align:center}
+h1{
+  text-align:center;
+}
 
 .card{
   background:white;
@@ -31,6 +33,7 @@ button{
   border-radius:10px;
   background:#67c587;
   color:white;
+  cursor:pointer;
 }
 
 input,textarea{
@@ -41,13 +44,16 @@ input,textarea{
   border:1px solid #ddd;
 }
 
-#result{font-size:18px;margin-top:10px}
+#result{
+  font-size:20px;
+  margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>🍀李米米考古馆 V9.1</h1>
+<h1>🍀李米米考古馆 V9.2</h1>
 <p style="text-align:center">🍕今天看什么呢？</p>
 
 <div class="card">
@@ -58,10 +64,10 @@ input,textarea{
 <div class="card">
 <h3>📝 添加考古记录</h3>
 
-<input id="name" placeholder="昵称"/>
+<input id="name" placeholder="你的昵称"/>
 <textarea id="thought" placeholder="感想"></textarea>
 
-<button onclick="save()">保存记录</button>
+<button onclick="save()">💾 保存记录</button>
 </div>
 
 <div class="card">
@@ -71,69 +77,85 @@ input,textarea{
 
 <script>
 
-// 🔑 Supabase
+// ====== Supabase ======
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
-const supabaseKey = "你刚刚那个anon key";
+const supabaseKey = "你的anon key（保留你自己的）";
 
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-let currentMaterial = "";
+let currentMaterial = null;
 
-// 🎲 从数据库抽签（关键升级点）
+// ====== 🎲 抽签（V9.2升级版） ======
 async function draw(){
 
-  let { data } = await client.from("materials").select("*");
+  const { data, error } = await client
+    .from("materials")
+    .select("*");
+
+  if(error){
+    alert("获取物料失败");
+    return;
+  }
 
   if(!data || data.length === 0){
     alert("没有物料");
     return;
   }
 
-  currentMaterial = data[Math.floor(Math.random()*data.length)].name;
+  const item = data[Math.floor(Math.random() * data.length)];
+
+  currentMaterial = item;
 
   document.getElementById("result").innerHTML =
-    "✨ 本次考古：" + currentMaterial;
+    "🍀 本次考古：" + item.name + "（" + item.type + "）";
 }
 
-// 💾 保存记录
+// ====== 💾 保存记录（V9.2） ======
 async function save(){
 
   const name = document.getElementById("name").value;
   const thought = document.getElementById("thought").value;
 
   if(!currentMaterial){
-    alert("先抽签！");
+    alert("先抽一个物料！");
     return;
   }
 
-  await client.from("records").insert([{
-    material_name: currentMaterial,
+  const { error } = await client.from("records").insert([{
+    material_id: currentMaterial.id,
+    material_name: currentMaterial.name,
     user_name: name,
     thought: thought,
     created_at: new Date().toISOString()
   }]);
 
+  if(error){
+    alert("保存失败");
+    return;
+  }
+
+  document.getElementById("thought").value = "";
   load();
 }
 
-// 📚 加载资料卡（实时）
+// ====== 📚 加载资料卡 ======
 async function load(){
 
-  let { data } = await client
+  const { data } = await client
     .from("records")
     .select("*")
     .order("created_at", { ascending: false });
 
   let html = "";
 
-  data.forEach(r=>{
+  data.forEach(r => {
     html += `
-      <div class="card">
-        <b>🎬 ${r.material_name}</b><br/>
-        👤 ${r.user_name}<br/>
-        💬 ${r.thought}<br/>
-        📅 ${new Date(r.created_at).toLocaleString()}
-      </div>
+    <div class="card">
+      <b>📦 ${r.material_name}</b><br/>
+      👤 ${r.user_name}<br/>
+      💬 ${r.thought}<br/>
+      📅 ${new Date(r.created_at).toLocaleString()}
+    </div>
     `;
   });
 
