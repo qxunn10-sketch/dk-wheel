@@ -16,7 +16,6 @@
   --muted:#666;
 }
 
-*{box-sizing:border-box}
 body{
   margin:0;
   padding:16px;
@@ -24,84 +23,78 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei";
   color:var(--text);
 }
+
 .wrap{max-width:1000px;margin:auto}
+
 h1{text-align:center;margin:10px 0 0;font-size:34px}
 .sub{text-align:center;color:var(--muted);margin-bottom:10px}
 
 .card{
-  background:var(--card);
+  background:#fff;
   border:1px solid var(--line);
   border-radius:16px;
   padding:14px;
   margin:12px 0;
 }
 
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-button,select,input,textarea{
+.row{display:flex;gap:10px;flex-wrap:wrap}
+
+button,input,select,textarea{
   padding:10px;
-  border-radius:12px;
+  border-radius:10px;
   border:1px solid var(--line);
   font:inherit;
 }
 
 .primary{background:var(--main);color:#fff;border:none}
-.soft{background:var(--soft)}
 
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
-.stat{background:var(--soft);padding:10px;border-radius:12px}
-
-#result{font-size:26px;font-weight:800;text-align:center;margin:10px 0}
-.badge{padding:4px 8px;background:var(--soft);border-radius:999px}
-
-.archive-card{
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
+#result{
+  font-size:26px;
+  font-weight:800;
+  text-align:center;
   margin:10px 0;
 }
+
+.badge{background:var(--soft);padding:4px 8px;border-radius:999px}
+
+.archive{
+  border:1px solid var(--line);
+  padding:12px;
+  border-radius:12px;
+  margin:10px 0;
+}
+
 .small{font-size:12px;color:var(--muted)}
 </style>
 </head>
 
 <body>
+
 <div class="wrap">
 
 <h1>🍀李米米考古馆</h1>
-<div class="sub">🍕今天看什么呢</div>
+<div class="sub">🍕 今天看什么呢</div>
 
 <div class="card">
-  <div class="stats">
-    <div class="stat"><b id="total">83</b><div>总物料</div></div>
-    <div class="stat"><b id="count">0</b><div>已考古</div></div>
+  <div class="row">
+    <button onclick="draw()">🎲 抽签</button>
+    <div id="result">等待抽取</div>
   </div>
 </div>
 
 <div class="card">
-<h2>🎲 抽签</h2>
-<select id="type">
-<option>全部</option>
-<option>舞台/花絮</option>
-<option>电台</option>
-<option>综艺</option>
-<option>直播</option>
-</select>
-<button class="primary" onclick="draw()">开始抽取</button>
+<h3>📅 记录</h3>
 
-<div id="result">等待抽取</div>
-<button onclick="toRecord()">记录这个物料</button>
-</div>
-
-<div class="card">
-<h2>📅 添加记录</h2>
-<input id="title" placeholder="物料名称"/>
+<input id="title" placeholder="物料"/>
 <input id="date" type="date"/>
 <input id="fans" placeholder="兼粉：林 A B"/>
 <textarea id="thought" placeholder="感想"></textarea>
-<button class="primary" onclick="save()">保存</button>
+<br/>
+<button class="primary" onclick="save()">保存记录</button>
 </div>
 
 <div class="card">
-<h2>📚 资料卡</h2>
+<h3>📚 资料卡</h3>
 <div id="list"></div>
 </div>
 
@@ -110,89 +103,118 @@ button,select,input,textarea{
 <script>
 
 const materials = [
-{id:"1",t:"130817 SVT 2nd Show LIKE SEVENTEEN",type:"舞台/花絮"},
-{id:"2",t:"160214 boys wish",type:"舞台/花絮"},
-{id:"3",t:"2016 Boys wish花絮",type:"舞台/花絮"},
-{id:"4",t:"2016 Shining Diamond首尔",type:"舞台/花絮"},
-{id:"5",t:"2016 shining diamond首尔制作花絮",type:"舞台/花絮"},
-{id:"6",t:"2016 shining diamond日本",type:"舞台/花絮"},
-{id:"7",t:"170221 Say the name横滨",type:"舞台/花絮"},
-{id:"8",t:"2017 Diamond Edge韩国",type:"舞台/花絮"},
-{id:"9",t:"2017 Diamond edge日本",type:"舞台/花絮"},
-{id:"10",t:"2017 Diamond Edge花絮",type:"舞台/花絮"},
-{id:"11",t:"180221 Arena SVT",type:"舞台/花絮"},
-{id:"12",t:"180531日本出道Showcase We Make You",type:"舞台/花絮"},
-{id:"13",t:"180701 IDEAL CUT韩D4",type:"舞台/花絮"},
-{id:"14",t:"IDEAL CUT花絮",type:"舞台/花絮"},
-{id:"15",t:"180909 IDEAL CUT日本",type:"舞台/花絮"},
-{id:"16",t:"181007 summer camp",type:"舞台/花絮"},
-{id:"17",t:"181103 IDEAL CUT安可场",type:"舞台/花絮"},
-{id:"18",t:"2019 Happy Ending Showcase",type:"舞台/花絮"},
-{id:"19",t:"190419 HARU",type:"舞台/花絮"},
-{id:"20",t:"190609 HANA",type:"舞台/花絮"},
-{id:"21",t:"190901 ODE TO YOU首尔D3",type:"舞台/花絮"},
-{id:"22",t:"2019 ODE TO YOU日本场",type:"舞台/花絮"},
-{id:"23",t:"200830克拉岛",type:"舞台/花絮"},
-{id:"24",t:"201108 24H release event",type:"舞台/花絮"},
-{id:"25",t:"210427 HARE",type:"舞台/花絮"},
-{id:"26",t:"210808克拉岛",type:"舞台/花絮"},
-{id:"27",t:"211225 Power of Love日本FM",type:"舞台/花絮"},
-{id:"28",t:"22克拉岛D1",type:"舞台/花絮"},
-{id:"29",t:"22克拉岛D2",type:"舞台/花絮"},
-{id:"30",t:"220508 Hanabi",type:"舞台/花絮"},
-{id:"31",t:"Hanabi making film",type:"舞台/花絮"},
-{id:"32",t:"220625 BE THE SUN首尔D1",type:"舞台/花絮"},
-{id:"33",t:"220626 BE THE SUN首尔D2",type:"舞台/花絮"},
-{id:"34",t:"221127 BE THE SUN东京D2",type:"舞台/花絮"},
-{id:"35",t:"220825 BE THE SUN芝加哥",type:"舞台/花絮"},
-{id:"36",t:"23克拉岛D1",type:"舞台/花絮"},
-{id:"37",t:"23克拉岛D2",type:"舞台/花絮"},
-{id:"38",t:"23克拉岛D3",type:"舞台/花絮"},
-{id:"39",t:"230528 LOVE东京",type:"舞台/花絮"},
-{id:"40",t:"230518 LOVE大阪",type:"舞台/花絮"},
-{id:"41",t:"24克拉岛D1",type:"舞台/花絮"},
-{id:"42",t:"24克拉岛D2",type:"舞台/花絮"},
-{id:"43",t:"25克拉岛D1",type:"舞台/花絮"},
-{id:"44",t:"25克拉岛D2",type:"舞台/花絮"}
+"130817 SVT 2nd Show LIKE SEVENTEEN",
+"160214 boys wish",
+"2016 Boys wish花絮",
+"2016 Shining Diamond首尔",
+"22016 shining diamond首尔制作花絮",
+"2016 shining diamond日本",
+"170221 Say the name横滨",
+"2017Diamond Edge韩国",
+"2017 Diamond edge日本",
+"2017 Diamond Edge花絮",
+"180221 Arena SVT",
+"180531日本出道Showcase We Make You",
+"180701 IDEAL CUT韩D4",
+"IDEAL CUT花絮",
+"180909 IDEAL CUT日本",
+"181007 summer camp",
+"181103 IDEAL CUT安可场",
+"2019 Happy Ending Showcase",
+"190419 HARU",
+"190609 HANA",
+"190901 ODE TO YOU 首尔D3",
+"2019 ODE TO YOU 日本场",
+"200830 克拉岛",
+"201108 24H release event",
+"210427 HARE",
+"210808 克拉岛",
+"211225 Power of Love日本圣诞FM",
+"22克拉岛D1",
+"22克拉岛D2",
+"220508 Hanabi",
+"Hanabi making film幕后花絮",
+"220625 BE THE SUN首尔D1",
+"220626 BE THE SUN首尔D2",
+"221127 BE THE SUN东京D2",
+"220825 BE THE SUN芝加哥舞台纯享",
+"23克拉岛D1",
+"23克拉岛D2",
+"23克拉岛D3",
+"230528 LOVE东京/多视角",
+"230518 LOVE大阪/多视角",
+"24克拉岛D1",
+"24克拉岛D2",
+"25克拉岛D1",
+"25克拉岛D2",
+
+"150703 Kiss The Radio",
+"160501 Kiss The Radio",
+"170609 NCT night night 电台",
+"180330 Hongkira 电台",
+"180322 金昌烈 old school 电台",
+"190926 young street 电台",
+"201022 入坑广场电台",
+"200629 李准 young street",
+"230211 Love game 电台",
+"160619 Kiss The Radio",
+"160703 Kiss The Radio",
+
+"160619 My Little TV",
+"171121 妈妈睡着后",
+"180609 SVT TV",
+"180317 K WORLD",
+"180331 SVT Special",
+"AmigoTV",
+"180131 AmigoTV",
+"Dispatch Mind",
+"191221 SVT寒假",
+"NewsAde合集",
+"文明快车",
+"SVT学校",
+"200614 阴森课外辅导",
+"220325 D'FESTA",
+
+"200308 耳待耳待71",
+"200429 耳待耳待77",
+"200528 耳待耳待81",
+"200725 突袭V"
 ];
 
 let cur=null;
-let records=[];
+let records = JSON.parse(localStorage.getItem("lm")||"[]");
 
 function draw(){
- const type=document.getElementById('type').value;
- const pool=materials.filter(m=>type==="全部"||m.type===type);
- cur=pool[Math.floor(Math.random()*pool.length)];
- document.getElementById('result').innerText=cur.t;
-}
-
-function toRecord(){
- if(!cur)return;
- document.getElementById('title').value=cur.t;
+cur = materials[Math.floor(Math.random()*materials.length)];
+document.getElementById("result").innerText = cur;
+document.getElementById("title").value = cur;
 }
 
 function save(){
- const obj={
-  title:document.getElementById('title').value,
-  date:document.getElementById('date').value,
-  fans:document.getElementById('fans').value,
-  thought:document.getElementById('thought').value
- };
- records.push(obj);
- render();
+const obj={
+title:document.getElementById("title").value,
+date:document.getElementById("date").value,
+fans:document.getElementById("fans").value,
+thought:document.getElementById("thought").value
+};
+records.push(obj);
+localStorage.setItem("lm",JSON.stringify(records));
+render();
 }
 
 function render(){
- document.getElementById('list').innerHTML =
- records.map(r=>
- `<div class='archive-card'>
- <b>${r.title}</b><br/>
- 📅${r.date}<br/>
- 👥${r.fans}<br/>
- 💬${r.thought}
- </div>`
- ).join('');
+document.getElementById("list").innerHTML =
+records.map(r=>
+`<div class='archive'>
+<b>${r.title}</b><br/>
+📅 ${r.date}<br/>
+👥 ${r.fans}<br/>
+💬 ${r.thought}
+</div>`
+).join("");
 }
+
+render();
 
 </script>
 
