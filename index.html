@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>🍀米米考古馆 V1</title>
+<title>🍀米米考古馆 V2</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 body{
   margin:0;
-  font-family: Arial;
+  font-family:Arial;
   background:#f4fff6;
 }
 
 h1{
   text-align:center;
-  margin:10px 0 0;
+  margin:10px;
 }
 
 .sub{
@@ -45,11 +45,11 @@ button{
   border:none;
   border-radius:10px;
   background:#67c587;
-  color:#fff;
+  color:white;
   cursor:pointer;
 }
 
-input,textarea,select{
+input,textarea{
   width:100%;
   margin-top:8px;
   padding:10px;
@@ -64,9 +64,15 @@ input,textarea,select{
   text-align:center;
   font-size:20px;
   font-weight:bold;
-  margin-top:10px;
 }
 
+.item{
+  padding:8px;
+  border-bottom:1px solid #eee;
+  cursor:pointer;
+}
+
+.small{font-size:12px;color:#777;}
 .grid2{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -74,31 +80,18 @@ input,textarea,select{
 }
 
 .box{
+  background:#f7fff9;
   padding:10px;
   border-radius:10px;
-  background:#f7fff9;
   text-align:center;
 }
 
-.small{font-size:12px;color:#777;}
-
-.tagBox{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;}
-.tag{padding:6px 10px;border-radius:20px;background:#e8f5ee;font-size:12px;cursor:pointer;}
-.tag.active{background:#4caf50;color:#fff;}
-
-.item{
-  padding:8px;
-  border-bottom:1px solid #eee;
-  font-size:13px;
-}
-
-.right{display:flex;flex-direction:column;}
 </style>
 </head>
 
 <body>
 
-<h1>🍀米米考古馆</h1>
+<h1>🍀米米考古馆 V2</h1>
 <div class="sub">🍕今天看什么呢</div>
 
 <div class="container">
@@ -107,39 +100,37 @@ input,textarea,select{
 <div>
 
   <div class="card">
-    <h3>🎲 抽签系统</h3>
-    <div class="tagBox" id="typeBox"></div>
+    <h3>🎲 抽签</h3>
     <button onclick="draw()">开始抽签</button>
-
     <div class="result" id="result">等待抽签...</div>
   </div>
 
   <div class="card">
     <h3>📚 考古记录</h3>
 
-    <div id="currentTitle">当前物料：未选择</div>
+    <div id="current">当前：未选择</div>
 
     <div class="grid2">
-      <div class="box">首次考古<br><span id="firstDate">-</span></div>
-      <div class="box">考古次数<br><span id="count">0</span></div>
+      <div class="box">首次<br><span id="first">-</span></div>
+      <div class="box">次数<br><span id="count">0</span></div>
     </div>
 
-    <input id="nickname" placeholder="昵称">
+    <input id="name" placeholder="昵称"/>
     <textarea id="thought" placeholder="观后感"></textarea>
 
-    <button onclick="saveRecord()">添加考古记录</button>
+    <button onclick="save()">添加考古记录</button>
 
-    <h4>📌 记录列表</h4>
+    <h4>记录列表</h4>
     <div id="recordList"></div>
   </div>
 
 </div>
 
 <!-- 右 -->
-<div class="right">
+<div>
 
   <div class="card">
-    <h3>📊 数据统计</h3>
+    <h3>📊 统计</h3>
     <div class="grid2">
       <div class="box">总物料<br><b id="total">0</b></div>
       <div class="box">已考古<br><b id="done">0</b></div>
@@ -147,21 +138,9 @@ input,textarea,select{
   </div>
 
   <div class="card">
-    <h3>🔍 物料库</h3>
-    <input id="search" oninput="renderMaterials()" placeholder="搜索物料">
+    <h3>🔍 搜索物料</h3>
+    <input id="search" oninput="renderMaterials()" placeholder="搜索"/>
     <div id="materials"></div>
-  </div>
-
-  <div class="card">
-    <h3>➕ 添加新物料</h3>
-    <input id="newName" placeholder="物料名称">
-    <select id="newType">
-      <option>舞台</option>
-      <option>综艺</option>
-      <option>直播</option>
-      <option>电台</option>
-    </select>
-    <button onclick="addMaterial()">添加</button>
   </div>
 
 </div>
@@ -174,11 +153,9 @@ const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
 const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3plcGpwaGxzcGR4Z2drZnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzEyODYsImV4cCI6MjA5NjkwNzI4Nn0.5KJ3dnn1D5PNwTqDM4KfJ5cpOC645GQewL0OgVPBC3o";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
-let materials = [];
-let records = [];
-let current = null;
-let selectedType = "全部";
-let session = [];
+let materials=[];
+let records=[];
+let current=null;
 
 /* 初始化 */
 init();
@@ -186,178 +163,124 @@ init();
 async function init(){
   await loadMaterials();
   await loadRecords();
-  renderTypes();
   renderStats();
 }
 
-/* 物料 */
+/* 数据 */
 async function loadMaterials(){
-  let {data} = await client.from("materials").select("*");
-  materials = data || [];
+  let {data}=await client.from("materials").select("*");
+  materials=data||[];
   renderMaterials();
 }
 
-/* 记录 */
 async function loadRecords(){
-  let {data} = await client.from("records")
+  let {data}=await client.from("records")
     .select("*")
     .order("created_at",{ascending:false});
 
-  records = data || [];
+  records=data||[];
   renderRecords();
-  renderRecordInfo();
   renderStats();
-}
-
-/* 分类 */
-function renderTypes(){
-  let types = ["全部", ...new Set(materials.map(m=>m.type))];
-  let box = document.getElementById("typeBox");
-  box.innerHTML = "";
-
-  types.forEach(t=>{
-    box.innerHTML += `
-      <div class="tag ${selectedType===t?'active':''}"
-      onclick="setType('${t}')">
-        ${t}
-      </div>`;
-  });
-}
-
-function setType(t){
-  selectedType = t;
-  renderTypes();
 }
 
 /* 抽签 */
 function draw(){
 
-  let pool = materials;
-
-  if(selectedType !== "全部"){
-    pool = materials.filter(m=>m.type===selectedType);
-  }
-
-  if(!pool.length){
-    alert("该分类没有物料");
+  if(materials.length===0){
+    alert("没有物料");
     return;
   }
 
-  current = pool[Math.floor(Math.random()*pool.length)];
+  current = materials[Math.floor(Math.random()*materials.length)];
 
-  document.getElementById("result").innerHTML =
-    `🍀今天抽到<br><br>${current.name}`;
+  document.getElementById("result").innerHTML=
+    "🍀抽到：" + current.name;
 
-  document.getElementById("currentTitle").innerText =
-    "当前物料：" + current.name;
+  setCurrent(current);
+}
+
+/* 设置当前物料 */
+function setCurrent(m){
+
+  current = m;
+  document.getElementById("current").innerText =
+    "当前：" + m.name;
 
   renderRecordInfo();
 }
 
-/* 记录信息 */
-function renderRecordInfo(){
-
-  if(!current) return;
-
-  let r = records.filter(x=>x.material_name===current.name);
-
-  document.getElementById("count").innerText = r.length;
-
-  document.getElementById("firstDate").innerText =
-    r.length ? r[0].created_at.split("T")[0] : "-";
-
-  let box = document.getElementById("recordList");
-  box.innerHTML = "";
-
-  r.forEach(x=>{
-    box.innerHTML += `
-      <div class="item">
-        📅 ${x.created_at.split("T")[0]}<br>
-        👤 ${x.user_name || "-"}<br>
-        💬 ${x.thought || "-"}
-      </div>`;
-  });
-}
-
-/* 保存记录（修复版） */
-async function saveRecord(){
+/* 保存记录（核心） */
+async function save(){
 
   if(!current){
-    alert("先抽签");
+    alert("先选择物料");
     return;
   }
 
-  let name = document.getElementById("nickname").value;
-  let thought = document.getElementById("thought").value;
+  let name=document.getElementById("name").value;
+  let thought=document.getElementById("thought").value;
 
-  const { error } = await client.from("records").insert([{
-    material_name: current.name,
-    user_name: name,
-    thought: thought,
-    created_at: new Date().toISOString()
+  await client.from("records").insert([{
+    material_name:current.name,
+    user_name:name,
+    thought:thought,
+    created_at:new Date().toISOString()
   }]);
-
-  if(error){
-    alert("保存失败");
-    console.log(error);
-    return;
-  }
-
-  document.getElementById("thought").value = "";
 
   await loadRecords();
   renderRecordInfo();
-  renderStats();
+}
+
+/* 记录分析（核心） */
+function renderRecordInfo(){
+
+  if(!current)return;
+
+  let r=records.filter(x=>x.material_name===current.name);
+
+  document.getElementById("count").innerText=r.length;
+
+  document.getElementById("first").innerText=
+    r.length?r[0].created_at.split("T")[0]:"-";
+
+  let box=document.getElementById("recordList");
+  box.innerHTML="";
+
+  r.forEach(x=>{
+    box.innerHTML+=`
+      <div class="item">
+        📅 ${x.created_at.split("T")[0]}<br>
+        👤 ${x.user_name||""}<br>
+        💬 ${x.thought||""}
+      </div>`;
+  });
 }
 
 /* 物料 */
 function renderMaterials(){
 
-  let key = document.getElementById("search").value || "";
+  let k=document.getElementById("search").value||"";
 
-  let list = materials.filter(m=>m.name.includes(key));
+  let list=materials.filter(m=>m.name.includes(k));
 
-  let box = document.getElementById("materials");
-  box.innerHTML = "";
+  let box=document.getElementById("materials");
+  box.innerHTML="";
 
   list.forEach(m=>{
-    box.innerHTML += `
-      <div class="item">
-        🎞 ${m.name}<br>
-        <span class="small">${m.type}</span>
+    box.innerHTML+=`
+      <div class="item" onclick="setCurrent(${JSON.stringify(m)})">
+        🎞 ${m.name}
       </div>`;
   });
-}
-
-/* 添加物料（修复版） */
-async function addMaterial(){
-
-  let name = document.getElementById("newName").value;
-  let type = document.getElementById("newType").value;
-
-  const { error } = await client.from("materials").insert([{name,type}]);
-
-  if(error){
-    alert("添加失败");
-    console.log(error);
-    return;
-  }
-
-  document.getElementById("newName").value = "";
-
-  await loadMaterials();
-  renderTypes();
-  renderMaterials();
-  renderStats();
 }
 
 /* 统计 */
 function renderStats(){
 
-  document.getElementById("total").innerText = materials.length;
+  document.getElementById("total").innerText=materials.length;
 
-  let done = new Set(records.map(r=>r.material_name));
-  document.getElementById("done").innerText = done.size;
+  let done=new Set(records.map(r=>r.material_name));
+  document.getElementById("done").innerText=done.size;
 }
 
 </script>
