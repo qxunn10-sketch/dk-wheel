@@ -137,7 +137,7 @@ input,textarea,select{
       </div>
     </div>
 
-    <input id="nickname" placeholder="兼粉昵称">
+    <input id="nickname" placeholder="昵称">
     <textarea id="thought" placeholder="观后感"></textarea>
 
     <button onclick="saveRecord()">添加考古记录</button>
@@ -184,7 +184,7 @@ input,textarea,select{
 <script>
 
 const supabaseUrl = "https://rygzepjphlspdxggkftn.supabase.co";
-const supabaseKey = "YOUR_ANON_KEY";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ5Z3plcGpwaGxzcGR4Z2drZnRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzMzEyODYsImV4cCI6MjA5NjkwNzI4Nn0.5KJ3dnn1D5PNwTqDM4KfJ5cpOC645GQewL0OgVPBC3o";
 const client = supabase.createClient(supabaseUrl, supabaseKey);
 
 let materials = [];
