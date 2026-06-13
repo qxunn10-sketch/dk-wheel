@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>李米米考古馆</title>
-<style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>🍀李米米考古馆</title>
 
+<style>
 :root{
   --bg:#f6fff6;
   --card:#ffffff;
@@ -21,466 +21,180 @@ body{
   margin:0;
   padding:16px;
   background:var(--bg);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei";
   color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,"Microsoft YaHei",sans-serif;
 }
-.wrap{max-width:920px;margin:auto}
-h1{text-align:center;margin:8px 0 4px;font-size:34px}
-.sub{text-align:center;color:var(--muted);margin-bottom:14px}
+.wrap{max-width:1000px;margin:auto}
+h1{text-align:center;margin:10px 0 0;font-size:34px}
+.sub{text-align:center;color:var(--muted);margin-bottom:10px}
+
 .card{
   background:var(--card);
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:16px;
-  margin:14px 0;
-  box-shadow:0 6px 18px rgba(180,90,120,.08);
-}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
-button,select,input,textarea{
-  font:inherit;
-  border:1px solid var(--line);
-  border-radius:12px;
-  padding:10px 12px;
-  background:#fff;
-}
-button{cursor:pointer}
-.primary{background:var(--pink);color:#fff;border-color:var(--pink);font-weight:700}
-.soft{background:var(--soft)}
-.danger{color:#b00020}
-#result{font-size:25px;font-weight:800;text-align:center;margin:16px 0 8px;line-height:1.35}
-.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--soft);color:var(--deep);font-size:13px;margin:3px}
-textarea{width:100%;min-height:72px;margin-top:8px;resize:vertical}
-.name{width:200px}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;text-align:center}
-.stat{background:var(--soft);border-radius:14px;padding:12px}
-.stat b{display:block;font-size:22px}
-.item{border-top:1px solid var(--line);padding:12px 0;text-align:left}
-.item:first-child{border-top:0}
-.item-title{font-weight:800;font-size:18px}
-.small{color:var(--muted);font-size:13px}
-.list-controls{display:flex;gap:8px;flex-wrap:wrap}
-.list-controls input{flex:1;min-width:180px}
-.archive-card{
   border:1px solid var(--line);
   border-radius:16px;
   padding:14px;
   margin:12px 0;
-  background:#fff;
 }
-.archive-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;flex-wrap:wrap}
-.archive-title{font-size:19px;font-weight:900}
-.log-box{
-  background:#fffafd;
-  border:1px dashed var(--line);
-  border-radius:14px;
+
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button,select,input,textarea{
   padding:10px;
-  margin-top:8px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  font:inherit;
 }
-.hidden{display:none}
-@media(max-width:520px){
-  body{padding:12px}
-  h1{font-size:30px}
-  #result{font-size:22px}
-  button,select,input{padding:9px 10px}
+
+.primary{background:var(--main);color:#fff;border:none}
+.soft{background:var(--soft)}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
+.stat{background:var(--soft);padding:10px;border-radius:12px}
+
+#result{font-size:26px;font-weight:800;text-align:center;margin:10px 0}
+.badge{padding:4px 8px;background:var(--soft);border-radius:999px}
+
+.archive-card{
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:12px;
+  margin:10px 0;
 }
+.small{font-size:12px;color:var(--muted)}
 </style>
 </head>
+
 <body>
 <div class="wrap">
-  <h1>🎡 李米米考古馆</h1>
-  <div class="sub">今天考古什么呢？</div>
-<div class="row" style="margin-top:8px;">
-  <button onclick="setTheme('green')" class="soft">🍀 四叶草</button>
-  <button onclick="setTheme('pink')" class="soft">🍕 奶油</button>
+
+<h1>🍀李米米考古馆</h1>
+<div class="sub">🍕今天看什么呢</div>
+
+<div class="card">
+  <div class="stats">
+    <div class="stat"><b id="total">83</b><div>总物料</div></div>
+    <div class="stat"><b id="count">0</b><div>已考古</div></div>
+  </div>
 </div>
 
+<div class="card">
+<h2>🎲 抽签</h2>
+<select id="type">
+<option>全部</option>
+<option>舞台/花絮</option>
+<option>电台</option>
+<option>综艺</option>
+<option>直播</option>
+</select>
+<button class="primary" onclick="draw()">开始抽取</button>
 
-  <div class="card">
-    <div class="row">
-      <span>你的昵称：</span>
-      <input class="name" id="nickname" placeholder="例如：小林" />
-    </div>
-  </div>
+<div id="result">等待抽取</div>
+<button onclick="toRecord()">记录这个物料</button>
+</div>
 
-  <div class="card">
-    <div class="stats">
-      <div class="stat"><b id="totalCount">0</b><span>总物料</span></div>
-      <div class="stat"><b id="archiveCount">0</b><span>已考古</span></div>
-    </div>
-  </div>
+<div class="card">
+<h2>📅 添加记录</h2>
+<input id="title" placeholder="物料名称"/>
+<input id="date" type="date"/>
+<input id="fans" placeholder="兼粉：林 A B"/>
+<textarea id="thought" placeholder="感想"></textarea>
+<button class="primary" onclick="save()">保存</button>
+</div>
 
-  <div class="card">
-    <h2>🎲 抽签</h2>
-    <div class="row">
-      <select id="drawType">
-        <option value="全部">⭐ 全部随机</option>
-        <option value="舞台/花絮">🌸 舞台/花絮</option>
-        <option value="电台">📻 电台</option>
-        <option value="综艺">📺 综艺</option>
-        <option value="直播">🔴 直播</option>
-      </select>
-      <button class="primary" id="drawBtn">开始抽取</button>
-    </div>
-    <div id="result">等待抽取</div>
-    <div id="resultMeta" class="small" style="text-align:center;"></div>
-    <div class="row" style="margin-top:10px;">
-      <button class="soft" id="openRecordBtn">📅 记录这个物料</button>
-      <button id="redrawBtn">换一个</button>
-    </div>
-  </div>
+<div class="card">
+<h2>📚 资料卡</h2>
+<div id="list"></div>
+</div>
 
-  <div class="card">
-    <h2>📅 添加考古记录</h2>
-    <div class="small">一个物料会生成一张资料卡；同一物料多次考古，会累计在同一张卡里。</div>
-
-    <div class="row" style="margin-top:10px;">
-      <input id="recordTitle" placeholder="物料名称，可由抽签自动带入" style="min-width:230px;flex:1;">
-      <select id="recordType">
-        <option value="舞台/花絮">舞台/花絮</option>
-        <option value="电台">电台</option>
-        <option value="综艺">综艺</option>
-        <option value="直播">直播</option>
-        <option value="其他">其他</option>
-      </select>
-    </div>
-
-    <div class="row" style="margin-top:8px;">
-      <input id="recordDate" type="date">
-      <input id="recordFans" placeholder="兼粉：林、A、B" style="min-width:230px;flex:1;">
-    </div>
-
-    <textarea id="recordThought" placeholder="感想：例如：返场封神、李米米这场状态很好..."></textarea>
-
-    <div class="row" style="margin-top:8px;">
-      <button class="primary" id="saveRecordBtn">保存考古记录</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>📚 考古资料卡</h2>
-    <div id="archives"></div>
-  </div>
-
-  <div class="card">
-    <h2>➕ 新增物料</h2>
-    <div class="row">
-      <input id="newTitle" placeholder="物料名称" style="min-width:220px;flex:1;">
-      <select id="newType">
-        <option value="舞台/花絮">舞台/花絮</option>
-        <option value="电台">电台</option>
-        <option value="综艺">综艺</option>
-        <option value="直播">直播</option>
-        <option value="其他">其他</option>
-      </select>
-      <button id="addBtn">添加</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>📂 物料库</h2>
-    <div class="list-controls">
-      <input id="search" placeholder="搜索物料...">
-      <select id="filterType">
-        <option value="全部">全部</option>
-        <option value="舞台/花絮">舞台/花絮</option>
-        <option value="电台">电台</option>
-        <option value="综艺">综艺</option>
-        <option value="直播">直播</option>
-        <option value="其他">其他</option>
-      </select>
-    </div>
-    <div id="materials"></div>
-  </div>
 </div>
 
 <script>
-const defaultMaterials=[
-{id:'m1',title:'130817 SVT 2nd Show LIKE SEVENTEEN',type:'舞台/花絮'},
-{id:'m2',title:'160214 Boys Wish',type:'舞台/花絮'},
-{id:'m3',title:'2016 Boys Wish花絮',type:'舞台/花絮'},
-{id:'m4',title:'2016 Shining Diamond首尔',type:'舞台/花絮'},
-{id:'m5',title:'2016 Shining Diamond首尔制作花絮',type:'舞台/花絮'},
-{id:'m6',title:'2016 Shining Diamond日本',type:'舞台/花絮'},
-{id:'m7',title:'170221 Say The Name横滨',type:'舞台/花絮'},
-{id:'m8',title:'2017 Diamond Edge韩国',type:'舞台/花絮'},
-{id:'m9',title:'2017 Diamond Edge日本',type:'舞台/花絮'},
-{id:'m10',title:'2017 Diamond Edge花絮',type:'舞台/花絮'},
-{id:'m11',title:"180221 Arena 'SVT'",type:'舞台/花絮'},
-{id:'m12',title:'180531 日本出道Showcase We Make You',type:'舞台/花絮'},
-{id:'m13',title:'180701 IDEAL CUT韩D4',type:'舞台/花絮'},
-{id:'m14',title:'IDEAL CUT花絮',type:'舞台/花絮'},
-{id:'m15',title:'180909 IDEAL CUT 日本',type:'舞台/花絮'},
-{id:'m16',title:'181007 Summer Camp',type:'舞台/花絮'},
-{id:'m17',title:'181103 IDEAL CUT安可场',type:'舞台/花絮'},
-{id:'m18',title:'2019 Happy Ending Showcase',type:'舞台/花絮'},
-{id:'m19',title:'190419 HARU',type:'舞台/花絮'},
-{id:'m20',title:'190609 HANA',type:'舞台/花絮'},
-{id:'m21',title:'190901 ODE TO YOU 首尔D3',type:'舞台/花絮'},
-{id:'m22',title:'2019 ODE TO YOU 日本场',type:'舞台/花絮'},
-{id:'m23',title:'200830 克拉岛',type:'舞台/花絮'},
-{id:'m24',title:'201108 24H Release Event',type:'舞台/花絮'},
-{id:'m25',title:'210427 HARE',type:'舞台/花絮'},
-{id:'m26',title:'210808 克拉岛',type:'舞台/花絮'},
-{id:'m27',title:'211225 Power of Love日本圣诞FM',type:'舞台/花絮'},
-{id:'m28',title:'22克拉岛D1',type:'舞台/花絮'},
-{id:'m29',title:'22克拉岛D2',type:'舞台/花絮'},
-{id:'m30',title:'220508 Hanabi',type:'舞台/花絮'},
-{id:'m31',title:'Hanabi making film幕后花絮',type:'舞台/花絮'},
-{id:'m32',title:'220625 BE THE SUN首尔D1',type:'舞台/花絮'},
-{id:'m33',title:'220626 BE THE SUN首尔D2',type:'舞台/花絮'},
-{id:'m34',title:'221127 BE THE SUN东京D2',type:'舞台/花絮'},
-{id:'m35',title:'220825 BE THE SUN芝加哥舞台纯享',type:'舞台/花絮'},
-{id:'m36',title:'23克拉岛D1',type:'舞台/花絮'},
-{id:'m37',title:'23克拉岛D2',type:'舞台/花絮'},
-{id:'m38',title:'23克拉岛D3',type:'舞台/花絮'},
-{id:'m39',title:'230528 LOVE东京/多视角',type:'舞台/花絮'},
-{id:'m40',title:'230518 LOVE大阪/多视角',type:'舞台/花絮'},
-{id:'m41',title:'24克拉岛D1',type:'舞台/花絮'},
-{id:'m42',title:'24克拉岛D2',type:'舞台/花絮'},
-{id:'m43',title:'25克拉岛D1',type:'舞台/花絮'},
-{id:'m44',title:'25克拉岛D2',type:'舞台/花絮'},
 
-{id:'m45',title:'150703 Kiss The Radio',type:'电台'},
-{id:'m46',title:'160501 Kiss The Radio',type:'电台'},
-{id:'m47',title:'170609 NCT的Night Night电台',type:'电台'},
-{id:'m48',title:'180330 Hongkira电台',type:'电台'},
-{id:'m49',title:'180322 金昌烈的Old School电台',type:'电台'},
-{id:'m50',title:'190926 郑素敏Young Street电台',type:'电台'},
-{id:'m51',title:'201022 入坑的广场电台',type:'电台'},
-{id:'m52',title:'200629 李准的Young Street',type:'电台'},
-{id:'m53',title:'230211 朴素贤的Love Game电台',type:'电台'},
-{id:'m54',title:'160619 Kiss The Radio',type:'电台'},
-{id:'m55',title:'160703 Kiss The Radio',type:'电台'},
-
-{id:'m56',title:'160619 My Little TV',type:'综艺'},
-{id:'m57',title:'171121 妈妈睡着后',type:'综艺'},
-{id:'m58',title:'180609 真实! SVT TV',type:'综艺'},
-{id:'m59',title:'180317 K WORLD秘密追踪',type:'综艺'},
-{id:'m60',title:'180331 二周年纪念特番 全力SEVENTEEN Special!',type:'综艺'},
-{id:'m61',title:'Vlive网红拉面挑战记②',type:'综艺'},
-{id:'m62',title:'180131 AmigoTV',type:'综艺'},
-{id:'m63',title:'180331 Abema TV SVT追踪',type:'综艺'},
-{id:'m64',title:'191023 挑战! Dispatch Mind',type:'综艺'},
-{id:'m65',title:'191221 SEVENTEEN的休息日2: SEVENTEEN的寒假',type:'综艺'},
-{id:'m66',title:'NewsAde合集',type:'综艺'},
-{id:'m67',title:'文明快车EP.158+文明特辑EP.122',type:'综艺'},
-{id:'m68',title:'SVT学校',type:'综艺'},
-{id:'m69',title:'200614 教练在看着-阴森的课外辅导',type:'综艺'},
-{id:'m70',title:"220325 D'FESTA",type:'综艺'},
-
-{id:'m71',title:'200308 耳待耳待#71',type:'直播'},
-{id:'m72',title:'200429 耳待耳待#77',type:'直播'},
-{id:'m73',title:'200528 耳待耳待#81',type:'直播'},
-{id:'m74',title:'200725 突袭V',type:'直播'}
+const materials = [
+{id:"1",t:"130817 SVT 2nd Show LIKE SEVENTEEN",type:"舞台/花絮"},
+{id:"2",t:"160214 boys wish",type:"舞台/花絮"},
+{id:"3",t:"2016 Boys wish花絮",type:"舞台/花絮"},
+{id:"4",t:"2016 Shining Diamond首尔",type:"舞台/花絮"},
+{id:"5",t:"2016 shining diamond首尔制作花絮",type:"舞台/花絮"},
+{id:"6",t:"2016 shining diamond日本",type:"舞台/花絮"},
+{id:"7",t:"170221 Say the name横滨",type:"舞台/花絮"},
+{id:"8",t:"2017 Diamond Edge韩国",type:"舞台/花絮"},
+{id:"9",t:"2017 Diamond edge日本",type:"舞台/花絮"},
+{id:"10",t:"2017 Diamond Edge花絮",type:"舞台/花絮"},
+{id:"11",t:"180221 Arena SVT",type:"舞台/花絮"},
+{id:"12",t:"180531日本出道Showcase We Make You",type:"舞台/花絮"},
+{id:"13",t:"180701 IDEAL CUT韩D4",type:"舞台/花絮"},
+{id:"14",t:"IDEAL CUT花絮",type:"舞台/花絮"},
+{id:"15",t:"180909 IDEAL CUT日本",type:"舞台/花絮"},
+{id:"16",t:"181007 summer camp",type:"舞台/花絮"},
+{id:"17",t:"181103 IDEAL CUT安可场",type:"舞台/花絮"},
+{id:"18",t:"2019 Happy Ending Showcase",type:"舞台/花絮"},
+{id:"19",t:"190419 HARU",type:"舞台/花絮"},
+{id:"20",t:"190609 HANA",type:"舞台/花絮"},
+{id:"21",t:"190901 ODE TO YOU首尔D3",type:"舞台/花絮"},
+{id:"22",t:"2019 ODE TO YOU日本场",type:"舞台/花絮"},
+{id:"23",t:"200830克拉岛",type:"舞台/花絮"},
+{id:"24",t:"201108 24H release event",type:"舞台/花絮"},
+{id:"25",t:"210427 HARE",type:"舞台/花絮"},
+{id:"26",t:"210808克拉岛",type:"舞台/花絮"},
+{id:"27",t:"211225 Power of Love日本FM",type:"舞台/花絮"},
+{id:"28",t:"22克拉岛D1",type:"舞台/花絮"},
+{id:"29",t:"22克拉岛D2",type:"舞台/花絮"},
+{id:"30",t:"220508 Hanabi",type:"舞台/花絮"},
+{id:"31",t:"Hanabi making film",type:"舞台/花絮"},
+{id:"32",t:"220625 BE THE SUN首尔D1",type:"舞台/花絮"},
+{id:"33",t:"220626 BE THE SUN首尔D2",type:"舞台/花絮"},
+{id:"34",t:"221127 BE THE SUN东京D2",type:"舞台/花絮"},
+{id:"35",t:"220825 BE THE SUN芝加哥",type:"舞台/花絮"},
+{id:"36",t:"23克拉岛D1",type:"舞台/花絮"},
+{id:"37",t:"23克拉岛D2",type:"舞台/花絮"},
+{id:"38",t:"23克拉岛D3",type:"舞台/花絮"},
+{id:"39",t:"230528 LOVE东京",type:"舞台/花絮"},
+{id:"40",t:"230518 LOVE大阪",type:"舞台/花絮"},
+{id:"41",t:"24克拉岛D1",type:"舞台/花絮"},
+{id:"42",t:"24克拉岛D2",type:"舞台/花絮"},
+{id:"43",t:"25克拉岛D1",type:"舞台/花絮"},
+{id:"44",t:"25克拉岛D2",type:"舞台/花絮"}
 ];
 
-let materials = JSON.parse(localStorage.getItem('lm_card_materials') || 'null') || defaultMaterials;
-if(!Array.isArray(materials) || materials.length===0){
-  materials = defaultMaterials;
-  localStorage.setItem('lm_card_materials', JSON.stringify(materials));
-}
-let records = JSON.parse(localStorage.getItem('lm_card_records') || '[]');
-let current = null;
+let cur=null;
+let records=[];
 
-const nicknameInput=document.getElementById('nickname');
-nicknameInput.value=localStorage.getItem('lm_card_nick')||'';
-nicknameInput.addEventListener('input',()=>localStorage.setItem('lm_card_nick',nicknameInput.value.trim()));
-
-document.getElementById('recordDate').value = new Date().toISOString().slice(0,10);
-
-function nick(){return nicknameInput.value.trim()||'匿名'}
-function emoji(t){return t==='舞台/花絮'?'🌸':t==='电台'?'📻':t==='综艺'?'📺':t==='直播'?'🔴':'📌'}
-
-function saveAll(){
-  localStorage.setItem('lm_card_materials',JSON.stringify(materials));
-  localStorage.setItem('lm_card_records',JSON.stringify(records));
-  updateStats();
-  renderArchives();
-  renderMaterials();
+function draw(){
+ const type=document.getElementById('type').value;
+ const pool=materials.filter(m=>type==="全部"||m.type===type);
+ cur=pool[Math.floor(Math.random()*pool.length)];
+ document.getElementById('result').innerText=cur.t;
 }
 
-function drawMaterial(){
-  const t=document.getElementById('drawType').value;
-  const pool=materials.filter(m=>t==='全部'||m.type===t);
-  if(!pool.length){alert('这个分类还没有物料');return}
-  current=pool[Math.floor(Math.random()*pool.length)]; currentMaterial=current;
-  document.getElementById('result').innerText='✨ '+current.title;
-  document.getElementById('resultMeta').innerHTML='<span class="badge">'+emoji(current.type)+' '+current.type+'</span>'; setTimeout(()=>focusCard(current.title),200);;
+function toRecord(){
+ if(!cur)return;
+ document.getElementById('title').value=cur.t;
 }
 
-function openRecord(){
-  if(!current){alert('请先抽取一个物料');return}
-  document.getElementById('recordTitle').value=current.title;
-  document.getElementById('recordType').value=current.type;
-  document.getElementById('recordFans').value=nick();
-  document.getElementById('recordThought').focus();
-  document.getElementById('recordTitle').scrollIntoView({behavior:'smooth',block:'center'});
+function save(){
+ const obj={
+  title:document.getElementById('title').value,
+  date:document.getElementById('date').value,
+  fans:document.getElementById('fans').value,
+  thought:document.getElementById('thought').value
+ };
+ records.push(obj);
+ render();
 }
 
-function saveRecord(){
-  const title=document.getElementById('recordTitle').value.trim();
-  const type=document.getElementById('recordType').value;
-  const date=document.getElementById('recordDate').value;
-  const fans=document.getElementById('recordFans').value.trim();
-  const thought=document.getElementById('recordThought').value.trim();
-
-  if(!title){alert('请填写物料名称');return}
-  if(!date){alert('请选择考古日期');return}
-
-  let m=materials.find(x=>x.title===title);
-  if(!m){
-    m={id:'m'+Date.now(),title:title,type:type};
-    materials.push(m);
-  }
-
-  records.unshift({
-    id:'r'+Date.now(),
-    materialId:m.id,
-    title:title,
-    type:type,
-    date:date,
-    fans:fans,
-    thought:thought,
-    author:nick(),
-    time:new Date().toLocaleString()
-  });
-
-  document.getElementById('recordThought').value='';
-  saveAll();
-  alert('已保存考古记录');
-}
-
-function addMaterial(){
-  const title=document.getElementById('newTitle').value.trim();
-  const type=document.getElementById('newType').value;
-  if(!title){alert('请填写物料名称');return}
-  materials.push({id:'m'+Date.now(),title:title,type:type});
-  document.getElementById('newTitle').value='';
-  saveAll();
-}
-
-function groupedRecords(){
-  const map={};
-  records.forEach(r=>{
-    if(!map[r.title]) map[r.title]={title:r.title,type:r.type,items:[]};
-    map[r.title].items.push(r);
-  });
-  return Object.values(map);
-}
-
-function deleteRecord(id){
-  if(confirm('确定删除这条考古记录吗？')){
-    records=records.filter(r=>r.id!==id);
-    saveAll();
-  }
-}
-
-function renderArchives(){
-  const box=document.getElementById('archives');
-  const groups=groupedRecords();
-  if(!groups.length){
-    box.innerHTML='<div class="small">还没有资料卡。可以抽签后记录，也可以手动补。</div>';
-    return;
-  }
-
-  box.innerHTML=groups.map(g=>{
-    const dates=g.items.map(r=>r.date).sort();
-    const firstDate=dates[0] || '暂无';
-    const lastDate=dates[dates.length-1] || '暂无';
-    const allFans=[...new Set(g.items.flatMap(r=>r.fans.split(/[、,，\s]+/).filter(Boolean)))];
-
-    const logs=g.items.map((r,i)=>
-      '<div class="log-box">'+
-      '<b>第 '+(g.items.length-i)+' 次考古｜📅 '+r.date+'</b>'+
-      '<div>🌸 兼粉：'+(r.fans||'未填写')+'</div>'+
-      '<div>💬 感想：'+(r.thought||'没有填写')+'</div>'+
-      '<div class="small">记录人：'+(r.author||'匿名')+'</div>'+
-      '<button class="danger" onclick="deleteRecord(\''+r.id+'\')">删除这条</button>'+
-      '</div>'
-    ).join('');
-
-    return '<div class="archive-card">'+
-      '<div class="archive-head">'+
-      '<div><div class="archive-title">'+emoji(g.type)+' '+g.title+'</div><div class="small">分类：'+g.type+'</div></div>'+
-      '<div><span class="badge">已考古</span><span class="badge">考古次数 '+g.items.length+'</span></div>'+
-      '</div>'+
-      '<div style="margin-top:8px;">'+
-      '<div>📅 首次考古：'+firstDate+'</div>'+
-      '<div>📅 最近考古：'+lastDate+'</div>'+
-      '<div>🌸 兼粉：'+(allFans.join('、')||'暂无')+'</div>'+
-      '</div>'+
-      '<h4>考古记录</h4>'+logs+
-      '</div>';
-  }).join('');
-}
-
-function renderMaterials(){
-  const q=document.getElementById('search').value.trim().toLowerCase();
-  const t=document.getElementById('filterType').value;
-  const arr=materials.filter(m=>(t==='全部'||m.type===t)&&m.title.toLowerCase().includes(q));
-
-  document.getElementById('materials').innerHTML=arr.map(m=>
-    '<div class="item">'+
-    '<span class="item-title">'+emoji(m.type)+' '+m.title+'</span>'+
-    '<span class="badge">'+m.type+'</span>'+
-    '<div style="margin-top:8px;"><button onclick="manualRecord(\''+m.id+'\')">记录这个</button></div>'+
-    '</div>'
-  ).join('') || '<div class="small">没有找到物料。</div>';
-}
-
-function manualRecord(id){
-  const m=materials.find(x=>x.id===id);
-  if(!m)return;
-  document.getElementById('recordTitle').value=m.title;
-  document.getElementById('recordType').value=m.type;
-  document.getElementById('recordFans').value=nick();
-  document.getElementById('recordThought').focus();
-  document.getElementById('recordTitle').scrollIntoView({behavior:'smooth',block:'center'});
-}
-
-function updateStats(){
-  document.getElementById('totalCount').innerText=materials.length;
-  document.getElementById('archiveCount').innerText=groupedRecords().length;
-}
-
-document.getElementById('drawBtn').addEventListener('click',drawMaterial);
-document.getElementById('redrawBtn').addEventListener('click',drawMaterial);
-document.getElementById('openRecordBtn').addEventListener('click',openRecord);
-document.getElementById('saveRecordBtn').addEventListener('click',saveRecord);
-document.getElementById('addBtn').addEventListener('click',addMaterial);
-document.getElementById('search').addEventListener('input',renderMaterials);
-document.getElementById('filterType').addEventListener('change',renderMaterials);
-
-saveAll();
-
-let currentMaterial = null;
-
-function setTheme(t){
-  if(t==='green'){
-    document.documentElement.style.setProperty('--bg','#f6fff6');
-    document.documentElement.style.setProperty('--line','#d7f5d7');
-    document.documentElement.style.setProperty('--main','#67c587');
-    document.documentElement.style.setProperty('--soft','#eaffea');
-  }
-  if(t==='pink'){
-    document.documentElement.style.setProperty('--bg','#fff8fb');
-    document.documentElement.style.setProperty('--line','#f0dbe4');
-    document.documentElement.style.setProperty('--main','#f39abc');
-    document.documentElement.style.setProperty('--soft','#fff0f6');
-  }
-}
-
-function focusCard(title){
-  const cards=document.querySelectorAll('.archive-card, .item');
-  cards.forEach(c=>{
-    if(c.innerText.includes(title)){
-      c.scrollIntoView({behavior:'smooth',block:'center'});
-      c.style.boxShadow='0 0 0 3px var(--main)';
-      setTimeout(()=>c.style.boxShadow='',1200);
-    }
-  });
+function render(){
+ document.getElementById('list').innerHTML =
+ records.map(r=>
+ `<div class='archive-card'>
+ <b>${r.title}</b><br/>
+ 📅${r.date}<br/>
+ 👥${r.fans}<br/>
+ 💬${r.thought}
+ </div>`
+ ).join('');
 }
 
 </script>
+
 </body>
 </html>
